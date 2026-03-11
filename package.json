@@ -1,0 +1,23 @@
+{
+  "name": "x402-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter web --filter mcp-server dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mcp": "pnpm --filter mcp-server dev",
+    "build": "pnpm build:packages && pnpm --filter web --filter mcp-server build",
+    "build:packages": "pnpm --filter '@x402/contracts' build",
+    "build:web": "pnpm build:packages && pnpm --filter web build",
+    "build:mcp": "pnpm build:packages && pnpm --filter mcp-server build",
+    "start": "pnpm --parallel --filter web --filter mcp-server start",
+    "start:web": "pnpm --filter web start",
+    "start:mcp": "pnpm --filter mcp-server start",
+    "lint": "pnpm --filter web lint",
+    "type-check": "pnpm --filter web type-check"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
