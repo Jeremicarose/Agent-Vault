@@ -19,6 +19,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 LOG_FILE="$REPO_ROOT/logs/auto-commit.log"
 INTERVAL=60  # seconds
 
+
 mkdir -p "$REPO_ROOT/logs"
 
 log() {

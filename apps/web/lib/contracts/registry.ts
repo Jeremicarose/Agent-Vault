@@ -37,19 +37,18 @@ export interface KnownContract {
  * Registry of known contracts across chains
  * Key format: `${chainId}:${address.toLowerCase()}`
  *
- * TODO: Update with actual Hedera contract addresses once deployed
  */
 const knownContractsRegistry: Record<string, KnownContract> = {
   // ============================================================================
   // Hedera Testnet (296)
   // ============================================================================
 
-  // USDC - Testnet (placeholder)
-  [`${hederaTestnet.id}:0x0000000000000000000000000000000000000000`]: {
-    address: '0x0000000000000000000000000000000000000000' as Address,
+  // Test USDC (MockERC20WithEIP3009)
+  [`${hederaTestnet.id}:0x0673e78ccb1a401575f3514ddc920dabbdb3b3dd`]: {
+    address: '0x0673e78ccb1a401575f3514ddc920dabbdb3b3dd' as Address,
     chainId: hederaTestnet.id,
     name: 'USDC',
-    description: 'USD Coin on Hedera',
+    description: 'Test USD Coin on Hedera Testnet',
     logoUrl: '/tokens/usdc.svg',
     verified: true,
     protocol: 'Hedera Token Service',
@@ -61,11 +60,22 @@ const knownContractsRegistry: Record<string, KnownContract> = {
     supportedTypes: ['TransferWithAuthorization', 'Permit'],
   },
 
+  // AgentDelegator - Testnet
+  [`${hederaTestnet.id}:0x624f7c953dac044f3a38e7230c16f410cf7301d2`]: {
+    address: '0x624f7c953dac044f3a38e7230c16f410cf7301d2' as Address,
+    chainId: hederaTestnet.id,
+    name: 'AgentDelegator',
+    description: 'AgentVault smart account with session key enforcement',
+    verified: true,
+    protocol: 'AgentVault',
+    type: 'other',
+  },
+
   // ============================================================================
   // Hedera Mainnet (295)
   // ============================================================================
 
-  // USDC - Mainnet (placeholder)
+  // USDC - Mainnet (not yet deployed)
   [`${hedera.id}:0x0000000000000000000000000000000000000000`]: {
     address: '0x0000000000000000000000000000000000000000' as Address,
     chainId: hedera.id,

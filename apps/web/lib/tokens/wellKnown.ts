@@ -17,20 +17,19 @@ export interface WellKnownToken {
  * Well-known tokens per chain
  * These are common tokens users might want to allow for DeFi operations
  *
- * TODO: Update with actual Hedera HTS token addresses once deployed
  */
 const WELL_KNOWN_TOKENS_BY_CHAIN: Record<number, WellKnownToken[]> = {
   // Hedera Mainnet
   [hedera.id]: [
     {
-      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera mainnet USDC address
+      address: '0x0000000000000000000000000000000000000000', // TODO: deploy mainnet USDC
       symbol: 'USDC',
       name: 'USD Coin',
       decimals: 6,
       chainId: hedera.id,
     },
     {
-      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera mainnet WHBAR address
+      address: '0x0000000000000000000000000000000000000000', // TODO: mainnet WHBAR
       symbol: 'WHBAR',
       name: 'Wrapped HBAR',
       decimals: 8,
@@ -40,10 +39,10 @@ const WELL_KNOWN_TOKENS_BY_CHAIN: Record<number, WellKnownToken[]> = {
   // Hedera Testnet
   [hederaTestnet.id]: [
     {
-      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera testnet USDC address
+      address: '0x0673e78ccb1a401575f3514ddc920dabbdb3b3dd', // Test USDC (MockERC20WithEIP3009)
       symbol: 'USDC',
       name: 'USD Coin',
-      decimals: 6,
+      decimals: 18,
       chainId: hederaTestnet.id,
     },
   ],

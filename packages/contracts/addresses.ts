@@ -8,12 +8,11 @@ import type { Address } from 'viem'
 
 /**
  * AgentDelegator contract addresses by chain ID
- * TODO: Deploy to Hedera and update addresses
  */
 export const AGENT_DELEGATOR_ADDRESS: Record<number, Address> = {
-  // Hedera Testnet (chain 296) - TODO: deploy
-  296: '0x0000000000000000000000000000000000000000',
-  // Hedera Mainnet (chain 295) - TODO: deploy
+  // Hedera Testnet (chain 296)
+  296: '0x624f7c953dac044f3a38e7230c16f410cf7301d2',
+  // Hedera Mainnet (chain 295) - not yet deployed
   295: '0x0000000000000000000000000000000000000000',
 } as const
 

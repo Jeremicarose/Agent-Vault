@@ -14,15 +14,14 @@ export interface ChainTokens {
   }
 }
 
-// TODO: Update with actual Hedera USDC and token addresses once deployed
 // Hedera testnet chain ID = 296, mainnet = 295 (via JSON-RPC relay)
 export const tokens: Record<number, ChainTokens> = {
   // Hedera Testnet (via JSON-RPC relay)
   296: {
     usdc: {
-      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera testnet USDC address
+      address: '0x0673e78ccb1a401575f3514ddc920dabbdb3b3dd', // Test USDC (MockERC20WithEIP3009)
       symbol: 'USDC',
-      decimals: 6,
+      decimals: 18, // MockERC20 uses 18 decimals
     },
     native: {
       symbol: 'HBAR',

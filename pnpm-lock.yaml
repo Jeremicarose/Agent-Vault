@@ -13,9 +13,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.2
         version: 1.25.2(hono@4.11.3)(zod@4.3.5)
-      '@x402/payment':
-        specifier: workspace:*
-        version: link:../../packages/payment
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -101,9 +98,6 @@ importers:
       '@x402/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@x402/payment':
-        specifier: workspace:*
-        version: link:../../packages/payment
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -240,19 +234,6 @@ importers:
     dependencies:
       viem:
         specifier: ^2.41.0
-        version: 2.44.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.5)
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.19.5
-      tsup:
-        specifier: ^8.0.0
-        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)
-
-  packages/payment:
-    dependencies:
-      viem:
-        specifier: '>=2.0.0'
         version: 2.44.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.5)
     devDependencies:
       '@types/node':

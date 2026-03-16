@@ -24,7 +24,7 @@ export const KNOWN_CONTRACTS: Record<number, Record<string, KnownContract>> = {
   // Hedera Testnet
   [hederaTestnet.id]: {
     'usdc': {
-      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera testnet USDC
+      address: '0x0673e78ccb1a401575f3514ddc920dabbdb3b3dd', // Test USDC on Hedera testnet
       name: 'USDC',
       description: 'USD Coin for payments',
       category: 'payment',
@@ -33,7 +33,7 @@ export const KNOWN_CONTRACTS: Record<number, Record<string, KnownContract>> = {
   // Hedera Mainnet
   [hedera.id]: {
     'usdc': {
-      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera mainnet USDC
+      address: '0x0000000000000000000000000000000000000000', // TODO: Hedera mainnet USDC (not yet deployed)
       name: 'USDC',
       description: 'USD Coin for payments',
       category: 'payment',
