@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "cd /app && pnpm install && pnpm build:packages && cd /app/apps/mcp-server && pnpm build"
+  },
+  "deploy": {
+    "startCommand": "node /app/apps/mcp-server/dist/index.js",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

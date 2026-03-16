@@ -1,0 +1,1 @@
+ALTER TABLE "oauth_clients" ADD COLUMN "mcp_slug" varchar(50);

@@ -1,0 +1,5 @@
+# First ignore everything
+*
+
+# Then unignore repomix-output files
+!repomix-output*
