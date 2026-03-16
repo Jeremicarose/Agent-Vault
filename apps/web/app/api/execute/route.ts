@@ -33,7 +33,7 @@ const SUPPORTED_CHAINS: Record<number, Chain> = {
  *
  * Returns: { txHash }
  */
-export const POST = withAuth(async (user, request) => {
+export const POST = withAuth(async (_user, request) => {
   const body = await request.json()
   const {
     sessionId,
