@@ -4,15 +4,14 @@ import {
   createWalletClient,
   http,
   type Hex,
-  type Address,
+  type Chain,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { hederaTestnet, hedera } from 'viem/chains'
 import { withAuth } from '@/lib/auth'
-import { agentDelegatorAbi } from '@x402/contracts'
-import { AGENT_DELEGATOR_ADDRESS } from '@x402/contracts'
+import { agentDelegatorAbi, AGENT_DELEGATOR_ADDRESS } from '@x402/contracts'
 
-const SUPPORTED_CHAINS: Record<number, typeof hederaTestnet> = {
+const SUPPORTED_CHAINS: Record<number, Chain> = {
   296: hederaTestnet,
   295: hedera,
 }

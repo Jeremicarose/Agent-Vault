@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server'
 import {
   createPublicClient,
   http,
-  parseAbiItem,
   type Hex,
   type Address,
+  type Chain,
 } from 'viem'
 import { hederaTestnet, hedera } from 'viem/chains'
 import { withAuth } from '@/lib/auth'
 
-const SUPPORTED_CHAINS: Record<number, typeof hederaTestnet> = {
+const SUPPORTED_CHAINS: Record<number, Chain> = {
   296: hederaTestnet,
   295: hedera,
 }
@@ -35,7 +35,7 @@ const ERC20_TRANSFER_EVENT = parseAbiItem(
  *
  * Returns: { settled: boolean, transferAmount, blockNumber }
  */
-export const POST = withAuth(async (user, request) => {
+export const POST = withAuth(async (_user, request) => {
   const body = await request.json()
   const { txHash, chainId, token, from, to, amount } = body
 
