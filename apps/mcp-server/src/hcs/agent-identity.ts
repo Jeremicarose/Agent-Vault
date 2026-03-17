@@ -100,9 +100,10 @@ export async function registerAgent(params?: {
       'paid API calls and on-chain transactions with scoped session key permissions.'
     )
     builder.setCapabilities([
-      AIAgentCapability.KNOWLEDGE_MANAGEMENT,
-      AIAgentCapability.DATA_ANALYSIS,
-      AIAgentCapability.AUTONOMOUS_TRANSACTION,
+      AIAgentCapability.KNOWLEDGE_RETRIEVAL,
+      AIAgentCapability.TRANSACTION_ANALYTICS,
+      AIAgentCapability.API_INTEGRATION,
+      AIAgentCapability.WORKFLOW_AUTOMATION,
     ])
     builder.setType('autonomous')
     builder.setModel('claude-sonnet-4-5-20250929')
