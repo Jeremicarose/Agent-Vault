@@ -35,7 +35,7 @@ async function main() {
   console.log(`[MCP Server] HCS audit trail: ${hcsReady ? 'enabled' : 'disabled'}`)
 
   // Initialize HCS-10 agent identity (non-blocking)
-  const { registerAgent, getAgentIdentity } = await import('./hcs/agent-identity.js')
+  const { registerAgent } = await import('./hcs/agent-identity.js')
   registerAgent({ mcpEndpoint: MCP_PUBLIC_URL ?? undefined })
     .then(info => {
       if (info) console.log(`[MCP Server] HCS-10 agent identity: ${info.inboundTopicId}`)
