@@ -4,6 +4,7 @@ import type { AuthContext } from '../auth/oauth.js'
 import { buildPaymentForProxy } from '../payment/signer.js'
 import { db, apiProxies } from '../db/client.js'
 import { eq } from 'drizzle-orm'
+import { logToolInvocation } from '../hcs/client.js'
 
 /**
  * Variable definition from the proxy schema
@@ -186,6 +187,16 @@ export function createProxyTool(toolConfig: ToolConfig): McpToolDefinition {
 
         // Parse successful response
         const responseText = await response.text()
+
+        // Log tool invocation to HCS (fire-and-forget)
+        logToolInvocation({
+          agent: context.auth.session.sessionKeyAddress,
+          owner: context.auth.session.userId,
+          sessionId: context.auth.session.sessionId,
+          toolName: toolConfig.name,
+          proxyId: toolConfig.proxyId,
+          chainId: context.chainId,
+        }).catch(err => console.error('[HCS] Tool audit log failed:', err))
 
         // Try to parse as JSON and format nicely
         try {

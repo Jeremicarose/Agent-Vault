@@ -169,6 +169,22 @@ export async function executeWorkflow(
   logDebug('OUTPUT', 'Resolved output:', output)
 
   logDebug('COMPLETE', '=== Workflow execution completed successfully ===')
+
+  // Submit HCS audit message (fire-and-forget)
+  const txHashes = Object.values(stepResults)
+    .map(r => r.output)
+    .filter((o): o is { txHash: string } => !!o && typeof o === 'object' && 'txHash' in (o as Record<string, unknown>))
+    .map(o => o.txHash)
+
+  logWorkflowExecution({
+    agent: params.sessionKeyAddress,
+    owner: params.wallet,
+    sessionId: params.sessionId,
+    workflowName: workflow.steps[0]?.name ?? 'unknown',
+    txHashes: txHashes.length > 0 ? txHashes : undefined,
+    chainId: params.chainId,
+  }).catch(err => console.error('[HCS] Audit log failed:', err))
+
   return {
     success: true,
     output,
