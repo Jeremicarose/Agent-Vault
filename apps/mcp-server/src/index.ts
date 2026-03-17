@@ -27,7 +27,13 @@ async function main() {
   const PORT = parseInt(process.env.PORT ?? '3001', 10)
   const NEXT_APP_URL = process.env.NEXT_APP_URL ?? 'http://localhost:3000'
   const MCP_PUBLIC_URL = process.env.MCP_PUBLIC_URL ?? null
-  const CHAIN_ID = parseInt(process.env.CHAIN_ID ?? '338', 10)
+  const CHAIN_ID = parseInt(process.env.CHAIN_ID ?? '296', 10)
+
+  // Initialize HCS audit trail
+  const { initHcs } = await import('./hcs/client.js')
+  const hcsReady = await initHcs()
+  console.log(`[MCP Server] HCS audit trail: ${hcsReady ? 'enabled' : 'disabled'}`)
+
   console.log('[MCP Server] Starting...')
   console.log(`[MCP Server] Configuration:`)
   console.log(`  - Port: ${PORT}`)
