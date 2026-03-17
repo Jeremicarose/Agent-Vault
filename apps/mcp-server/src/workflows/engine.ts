@@ -8,6 +8,7 @@ import {
 } from './resolver'
 import { executeHttpStep } from './steps/http'
 import { executeOnchainStep, executeOnchainBatchStep } from './steps/onchain'
+import { logWorkflowExecution } from '../hcs/client.js'
 
 // Workflow debug logging - disabled by default for production
 const DEBUG = process.env.WORKFLOW_DEBUG === 'true'
