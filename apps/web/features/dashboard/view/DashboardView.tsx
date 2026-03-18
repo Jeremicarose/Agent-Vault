@@ -7,6 +7,7 @@ import { StatsCards } from './StatsCards'
 import { PeriodFilter } from './PeriodFilter'
 import { RequestLogsTable } from './RequestLogsTable'
 import { SessionManager } from '@/features/sessionKeys/view'
+import { HcsAuditTrail } from './HcsAuditTrail'
 
 const manageLinks = [
   {
