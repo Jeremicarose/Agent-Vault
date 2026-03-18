@@ -164,7 +164,7 @@ async function seed() {
         name: 'Check Price & Transfer USDC',
         description:
           'Fetches the current HBAR price from the Token Price API, then executes a USDC transfer on Hedera testnet. Demonstrates the full AgentVault pipeline: HTTP API call → on-chain transaction, all via session key permissions.',
-        definition: workflowDefinition,
+        workflowDefinition: workflowDefinition,
         inputSchema: [
           {
             name: 'tokenId',
