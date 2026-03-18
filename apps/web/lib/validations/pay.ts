@@ -6,17 +6,14 @@ import { z } from 'zod'
 const EVM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/
 
 /**
- */
-
-/**
+ * Validates a recipient address — must be a valid EVM address
  */
 export const recipientSchema = z.string().refine(
   (value) => {
     const normalized = value.toLowerCase().trim()
-    }
-    // Check if it's a valid EVM address
     return EVM_ADDRESS_REGEX.test(normalized)
   },
+  { message: 'Invalid EVM address' }
 )
 
 /**

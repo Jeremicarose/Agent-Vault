@@ -84,6 +84,9 @@ export function DashboardView() {
       {/* Session Keys */}
       <SessionManager />
 
+      {/* HCS Audit Trail */}
+      <HcsAuditTrail />
+
       {/* Management Links */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Manage</h2>
