@@ -14,9 +14,8 @@ const SUPPORTED_CHAINS: Record<number, Chain> = {
   295: hedera,
 }
 
-const ERC20_TRANSFER_EVENT = parseAbiItem(
-  'event Transfer(address indexed from, address indexed to, uint256 value)'
-)
+// Transfer event topic0: keccak256("Transfer(address,address,uint256)")
+const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 
 /**
  * POST /api/pay/settle — Verify payment settlement on-chain
