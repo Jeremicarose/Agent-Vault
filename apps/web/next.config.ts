@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     "@walletconnect/universal-provider",
     "@walletconnect/ethereum-provider",
   ],
+  // Turbopack config (Next.js 16 default bundler)
+  turbopack: {},
   webpack: (config) => {
     // Handle optional dependencies
     config.externals.push("pino-pretty", "lokijs", "encoding");
