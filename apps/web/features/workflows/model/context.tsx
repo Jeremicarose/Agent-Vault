@@ -39,9 +39,12 @@ function useWorkflowForm(options: UseWorkflowFormOptions = {}) {
     onSubmit: async ({ value }) => {
       const workflowDefinition = formToWorkflowDefinition(value)
 
+      // Auto-generate slug from name if not provided
+      const slug = value.slug || value.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
       const payload = {
         name: value.name,
-        slug: value.slug,
+        slug,
         description: value.description || null,
         inputSchema: value.inputSchema,
         workflowDefinition,

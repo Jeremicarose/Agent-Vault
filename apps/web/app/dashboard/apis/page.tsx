@@ -77,15 +77,15 @@ export default function DashboardApisPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Your APIs</h1>
+          <h1 className="text-2xl font-bold">Your Services</h1>
           <p className="text-muted-foreground">
-            Create and manage your payment-gated API proxies
+            Create and manage your paid services
           </p>
         </div>
         <Button asChild>
           <Link href="/create">
             <Plus className="size-4 mr-2" />
-            Create API
+            Add Service
           </Link>
         </Button>
       </div>
@@ -96,12 +96,12 @@ export default function DashboardApisPage() {
           <CardContent className="py-12">
             <div className="text-center">
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                You haven&apos;t created any APIs yet. Create your first one to start earning!
+                You haven&apos;t added any services yet. Add your first one to start earning!
               </p>
               <Button asChild>
                 <Link href="/create">
                   <Plus className="size-4 mr-2" />
-                  Create Your First API
+                  Add Your First Service
                 </Link>
               </Button>
             </div>

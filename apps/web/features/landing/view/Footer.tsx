@@ -17,7 +17,7 @@ export function Footer() {
           {/* Brand */}
           <Link href="/" className="flex items-center gap-1 font-semibold text-xl">
             <span className="text-foreground">Agent</span>
-            <span className="text-primary font-bold">Fabric</span>
+            <span className="text-primary font-bold">Vault</span>
           </Link>
 
           {/* Links */}

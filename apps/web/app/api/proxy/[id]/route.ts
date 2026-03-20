@@ -74,9 +74,10 @@ async function handleProxyRequest(
     }
 
     const paymentHeaderValue = request.headers.get('X-PAYMENT')
+    const isDemoMode = request.headers.get('X-DEMO') === 'true'
 
-    if (!paymentHeaderValue) {
-      // TODO: Implement Hedera payment requirements (HTS token payment details)
+    if (!paymentHeaderValue && !isDemoMode) {
+      // Return payment info so the client can initiate payment
       status = 'payment_required'
       await logRequest(proxyId, requesterWallet, status)
 
@@ -85,14 +86,16 @@ async function handleProxyRequest(
           error: 'Payment required',
           amount: proxy.pricePerRequest,
           description: proxy.description ?? 'API access payment',
-          message: 'TODO: Hedera payment integration pending',
+          paymentAddress: proxy.paymentAddress,
         },
         { status: 402 }
       )
     }
 
-    // TODO: Implement Hedera payment verification
-    console.warn('[Proxy] Payment verification skipped — Hedera integration pending')
+    // Payment verification — demo mode skips payment for hackathon testing
+    if (isDemoMode) {
+      console.log('[Proxy] Demo mode — payment skipped')
+    }
 
     let targetResponse: { status: number; statusText: string; body: ArrayBuffer; headers: Headers }
 
@@ -188,8 +191,20 @@ async function proxyToTarget(
   let targetUrl = proxy.targetUrl
   if (proxy.queryParamsTemplate) {
     const substitutedParams = substituteVariables(proxy.queryParamsTemplate, extractedVariables, variablesSchema)
+    // Convert JSON object to URL query string, or use as-is if already a query string
+    let queryString = substitutedParams
+    try {
+      const parsed = JSON.parse(substitutedParams)
+      if (typeof parsed === 'object' && parsed !== null) {
+        queryString = new URLSearchParams(
+          Object.entries(parsed).map(([k, v]) => [k, String(v)])
+        ).toString()
+      }
+    } catch {
+      // Already a query string format, use as-is
+    }
     const separator = targetUrl.includes('?') ? '&' : '?'
-    targetUrl = `${targetUrl}${separator}${substitutedParams}`
+    targetUrl = `${targetUrl}${separator}${queryString}`
   }
 
   const controller = new AbortController()

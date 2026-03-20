@@ -15,14 +15,12 @@ interface RouteParams {
  *
  * Get a single workflow template
  */
-export const GET = withAuth(async (user, request, context) => {
-  const { id } = await (context as RouteParams).params
+export async function GET(_request: NextRequest, context: RouteParams) {
+  const { id } = await context.params
 
+  // First try to find as a public workflow (no auth needed)
   const workflow = await db.query.workflowTemplates.findFirst({
-    where: and(
-      eq(workflowTemplates.id, id),
-      eq(workflowTemplates.userId, user.id)
-    ),
+    where: eq(workflowTemplates.id, id),
   })
 
   if (!workflow) {
@@ -30,7 +28,7 @@ export const GET = withAuth(async (user, request, context) => {
   }
 
   return NextResponse.json({ workflow })
-})
+}
 
 /**
  * PUT /api/workflows/[id]

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, Loader2, Wallet, Terminal } from 'lucide-react'
+import { Plus, Trash2, Loader2, Wallet, Terminal, ChevronDown, ChevronRight } from 'lucide-react'
 import { useAppKit } from '@reown/appkit/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +42,7 @@ export function ProxyForm() {
   const { open } = useAppKit()
   const [curlInput, setCurlInput] = useState('')
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(isEditing)
 
   const handleCurlImport = () => {
     const parsed = parseCurlCommand(curlInput)
@@ -79,11 +80,11 @@ export function ProxyForm() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle>{isEditing ? 'Edit API Proxy' : 'Monetize Your API'}</CardTitle>
+              <CardTitle>{isEditing ? 'Edit Service' : 'Add Service'}</CardTitle>
               <CardDescription>
                 {isEditing
-                  ? 'Update your payment-gated proxy configuration'
-                  : 'Create a payment-gated proxy for your existing API endpoint'}
+                  ? 'Update your service configuration'
+                  : 'Just add the name, URL, and price — you can configure the rest later'}
               </CardDescription>
             </div>
             <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
@@ -154,33 +155,6 @@ export function ProxyForm() {
               )}
             </form.Field>
 
-            {/* Slug Field */}
-            <form.Field name="slug">
-              {(field) => (
-                <Field data-invalid={field.state.meta.errors.length > 0}>
-                  <FieldLabel htmlFor={field.name}>
-                    Custom URL Slug
-                    <span className="text-muted-foreground font-normal"> (optional)</span>
-                  </FieldLabel>
-                  <FieldDescription>
-                    Create a friendly URL for your API (e.g., "my-api" becomes /edit/my-api)
-                  </FieldDescription>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    placeholder="my-awesome-api"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                    aria-invalid={field.state.meta.errors.length > 0}
-                  />
-                  {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                    <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
             {/* Description Field */}
             <form.Field name="description">
               {(field) => (
@@ -203,57 +177,6 @@ export function ProxyForm() {
                     <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
                   )}
                 </Field>
-              )}
-            </form.Field>
-
-            {/* Category Field */}
-            <form.Field name="category">
-              {(field) => (
-                <Field data-invalid={field.state.meta.errors.length > 0}>
-                  <FieldLabel htmlFor={field.name}>
-                    Category
-                    <span className="text-muted-foreground font-normal"> (optional)</span>
-                  </FieldLabel>
-                  <FieldDescription>
-                    Choose a category to help users discover your API
-                  </FieldDescription>
-                  <CategorySelect
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    onBlur={field.handleBlur}
-                  />
-                  {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                    <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Tags Field */}
-            <form.Field name="tags">
-              {(field) => (
-                <form.Subscribe selector={(state) => state.values.category}>
-                  {(category) => (
-                    <Field data-invalid={field.state.meta.errors.length > 0}>
-                      <FieldLabel htmlFor={field.name}>
-                        Tags
-                        <span className="text-muted-foreground font-normal"> (optional)</span>
-                      </FieldLabel>
-                      <FieldDescription>
-                        Add tags to help users find your API (max 10)
-                      </FieldDescription>
-                      <TagInput
-                        value={field.state.value}
-                        onChange={field.handleChange}
-                        onBlur={field.handleBlur}
-                        category={category}
-                      />
-                      {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                        <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
-                      )}
-                    </Field>
-                  )}
-                </form.Subscribe>
               )}
             </form.Field>
 
@@ -307,6 +230,87 @@ export function ProxyForm() {
             </form.Field>
 
             <Separator className="my-4" />
+
+            {/* Advanced Configuration Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showAdvanced ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+              Advanced Configuration
+              <span className="text-xs font-normal">(HTTP method, templates, headers, variables)</span>
+            </button>
+
+            {showAdvanced && <>
+            {/* Slug Field */}
+            <form.Field name="slug">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>
+                    Custom URL Slug
+                    <span className="text-muted-foreground font-normal"> (optional)</span>
+                  </FieldLabel>
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    placeholder="my-awesome-api"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                    aria-invalid={field.state.meta.errors.length > 0}
+                  />
+                  {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+                    <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Category Field */}
+            <form.Field name="category">
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0}>
+                  <FieldLabel htmlFor={field.name}>
+                    Category
+                    <span className="text-muted-foreground font-normal"> (optional)</span>
+                  </FieldLabel>
+                  <CategorySelect
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    onBlur={field.handleBlur}
+                  />
+                  {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+                    <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
+                  )}
+                </Field>
+              )}
+            </form.Field>
+
+            {/* Tags Field */}
+            <form.Field name="tags">
+              {(field) => (
+                <form.Subscribe selector={(state) => state.values.category}>
+                  {(category) => (
+                    <Field data-invalid={field.state.meta.errors.length > 0}>
+                      <FieldLabel htmlFor={field.name}>
+                        Tags
+                        <span className="text-muted-foreground font-normal"> (optional)</span>
+                      </FieldLabel>
+                      <TagInput
+                        value={field.state.value}
+                        onChange={field.handleChange}
+                        onBlur={field.handleBlur}
+                        category={category}
+                      />
+                      {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
+                        <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
+                      )}
+                    </Field>
+                  )}
+                </form.Subscribe>
+              )}
+            </form.Field>
 
             {/* HTTP Method Field */}
             <form.Field name="httpMethod">
@@ -473,6 +477,8 @@ export function ProxyForm() {
               )}
             </form.Field>
 
+            </>}
+
             <Separator className="my-4" />
 
             {/* Price Field */}
@@ -625,7 +631,7 @@ export function ProxyForm() {
               return (
                 <Button type="submit" disabled={!canSubmit}>
                   {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Proxy' : 'Create Proxy'}
+                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Service' : 'Add Service'}
                 </Button>
               )
             }}

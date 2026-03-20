@@ -311,6 +311,47 @@ function simulateOnchainStep(step: WorkflowStep, context: {
 }
 
 /**
+ * Simulate a transform step (dry run mode)
+ * Transform steps apply expressions to reshape data between steps.
+ */
+function simulateTransformStep(step: WorkflowStep, context: {
+  input: Record<string, unknown>
+  steps: Record<string, { output: unknown }>
+  wallet: string
+  chainId: number
+}): { output: unknown; error?: string } {
+  if (!step.transform) {
+    return { output: null, error: 'Transform configuration missing' }
+  }
+
+  // In dry run, resolve input mapping if available
+  const resolvedInputs = resolveMapping(step.inputMapping, context) ?? {}
+
+  // Try to evaluate the transform expression with available data
+  const expression = step.transform.expression
+  let transformResult: unknown = {
+    _simulated: true,
+    _message: 'Transform step would reshape data',
+    expression,
+    availableInputs: resolvedInputs,
+  }
+
+  // Simple expression evaluation for common patterns
+  try {
+    if (expression.startsWith('$.')) {
+      const resolved = resolveExpression(expression, context)
+      if (resolved !== undefined) {
+        transformResult = resolved
+      }
+    }
+  } catch {
+    // Keep simulated output on evaluation failure
+  }
+
+  return { output: transformResult }
+}
+
+/**
  * Run a dry-run test of the workflow
  */
 function runDryTest(
@@ -339,6 +380,18 @@ function runDryTest(
         case 'onchain':
         case 'onchain_batch':
           result = simulateOnchainStep(step, context)
+          break
+        case 'transform':
+          result = simulateTransformStep(step, context)
+          break
+        case 'condition':
+          result = {
+            output: {
+              _simulated: true,
+              _message: 'Condition step would be evaluated at runtime',
+              expression: step.condition?.expression,
+            },
+          }
           break
         default:
           result = { output: null, error: `Unknown step type: ${step.type}` }
@@ -399,13 +452,23 @@ export const POST = withAuth(async (user, request, context) => {
   const body = await request.json()
   const { inputs, dryRun = true } = body
 
-  // Fetch the workflow
-  const workflow = await db.query.workflowTemplates.findFirst({
+  // Fetch the workflow — check ownership first, then fall back to public workflows
+  let workflow = await db.query.workflowTemplates.findFirst({
     where: and(
       eq(workflowTemplates.id, id),
       eq(workflowTemplates.userId, user.id)
     ),
   })
+
+  if (!workflow) {
+    // Allow testing public workflows the user doesn't own
+    workflow = await db.query.workflowTemplates.findFirst({
+      where: and(
+        eq(workflowTemplates.id, id),
+        eq(workflowTemplates.isPublic, true)
+      ),
+    })
+  }
 
   if (!workflow) {
     return NextResponse.json({ error: 'Workflow not found' }, { status: 404 })

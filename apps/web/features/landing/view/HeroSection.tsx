@@ -10,18 +10,6 @@ export function HeroSection() {
 
   return (
     <section className="relative overflow-hidden py-20 lg:py-32">
-      {/* Background gradient effect with parallax */}
-      <div className="absolute inset-0 -z-10">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl"
-          style={{ transform: `translate(-50%, calc(-50% + ${scrollY * 0.3}px))` }}
-        />
-        <div
-          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-primary/3 blur-3xl"
-          style={{ transform: `translate(0, ${scrollY * 0.2}px)` }}
-        />
-      </div>
-
       <div className="container">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Text Content */}
@@ -32,9 +20,9 @@ export function HeroSection() {
               style={{ animationDelay: '100ms', animationFillMode: 'both' }}
             >
               <span>Built on Hedera</span>
-              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">·</span>
               <span>HTS-native</span>
-              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">·</span>
               <span>MCP-compatible</span>
             </div>
 
@@ -43,7 +31,8 @@ export function HeroSection() {
               className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight animate-fade-in"
               style={{ animationDelay: '200ms', animationFillMode: 'both' }}
             >
-              Agents with limits.
+              Agents with{' '}
+              <span className="gradient-text">limits.</span>
             </h1>
 
             {/* Subheadline */}
@@ -93,7 +82,7 @@ export function HeroSection() {
               <div className="flex flex-col items-center gap-6">
                 {/* Agent */}
                 <div className="flex items-center gap-4">
-                  <div className="p-4 rounded-xl bg-card border border-border shadow-lg">
+                  <div className="p-4 rounded-xl glass-card">
                     <Bot className="size-8 text-foreground" />
                   </div>
                   <span className="text-sm font-medium text-muted-foreground">AI Agent</span>
@@ -103,7 +92,7 @@ export function HeroSection() {
                 <div className="w-px h-8 bg-gradient-to-b from-border to-primary/50" />
 
                 {/* AgentVault Box - Permission Boundary */}
-                <div className="relative p-8 rounded-2xl border-2 border-primary/30 bg-primary/5">
+                <div className="relative p-8 rounded-2xl border-2 border-primary/30 bg-primary/5 backdrop-blur-sm">
                   {/* Dashed boundary indicator */}
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background border border-primary/30 text-xs text-primary font-medium">
                     Permission Boundary
@@ -131,13 +120,13 @@ export function HeroSection() {
                 {/* APIs + Hedera */}
                 <div className="flex items-center gap-12">
                   <div className="flex flex-col items-center gap-2">
-                    <div className="p-3 rounded-xl bg-card border border-border shadow-md">
+                    <div className="p-3 rounded-xl glass-card">
                       <Server className="size-6 text-muted-foreground" />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">Paid APIs</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <div className="p-3 rounded-xl bg-card border border-border shadow-md">
+                    <div className="p-3 rounded-xl glass-card">
                       <Box className="size-6 text-muted-foreground" />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">Hedera</span>

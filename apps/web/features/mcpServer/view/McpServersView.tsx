@@ -54,15 +54,15 @@ export function McpServersView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">MCP Servers</h1>
+          <h1 className="text-3xl font-bold">AI Agents</h1>
           <p className="text-muted-foreground mt-2">
-            Discover AI-ready MCP servers with tools and workflows for your agents
+            Discover AI agents with tools and automations ready to use
           </p>
         </div>
         <Link href="/dashboard/mcp">
           <Button className="gap-2">
             <Plus className="size-4" />
-            Create MCP Server
+            Create AI Agent
           </Button>
         </Link>
       </div>
@@ -73,7 +73,7 @@ export function McpServersView() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              placeholder="Search MCP servers..."
+              placeholder="Search AI agents..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-10 pr-10"
@@ -142,8 +142,8 @@ export function McpServersView() {
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground mb-4">
             {hasFilters
-              ? 'No MCP servers found matching your filters.'
-              : 'No public MCP servers available yet.'}
+              ? 'No AI agents found matching your filters.'
+              : 'No public AI agents available yet.'}
           </p>
           {hasFilters && (
             <Button variant="outline" onClick={clearFilters}>
@@ -156,7 +156,7 @@ export function McpServersView() {
       {/* Total count */}
       {!isLoading && pagination.total > 0 && (
         <p className="text-sm text-muted-foreground text-center">
-          Showing {servers.length} of {pagination.total} MCP servers
+          Showing {servers.length} of {pagination.total} AI agents
         </p>
       )}
     </div>

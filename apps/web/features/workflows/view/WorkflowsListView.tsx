@@ -181,15 +181,15 @@ export function WorkflowsListView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Workflows</h1>
+          <h1 className="text-2xl font-bold">Automations</h1>
           <p className="text-muted-foreground">
-            Create and manage workflow templates for AI agents
+            Create and manage multi-step automations for AI agents
           </p>
         </div>
         <Button asChild>
           <Link href="/workflows/create">
             <Plus className="size-4 mr-2" />
-            Create Workflow
+            Create Automation
           </Link>
         </Button>
       </div>
@@ -200,15 +200,15 @@ export function WorkflowsListView() {
           <CardContent className="py-12">
             <div className="text-center">
               <Workflow className="size-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">No workflows yet</h3>
+              <h3 className="text-lg font-medium mb-2">No automations yet</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Workflows combine HTTP calls and on-chain operations into reusable templates
-                that AI agents can execute.
+                Automations chain API calls and blockchain transactions together into
+                reusable templates that AI agents can run.
               </p>
               <Button asChild>
                 <Link href="/workflows/create">
                   <Plus className="size-4 mr-2" />
-                  Create Your First Workflow
+                  Create Your First Automation
                 </Link>
               </Button>
             </div>

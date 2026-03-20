@@ -151,15 +151,15 @@ export function PublicWorkflowsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Workflows</h1>
+          <h1 className="text-3xl font-bold">Automations</h1>
           <p className="text-muted-foreground mt-2">
-            Discover reusable workflow templates for AI agents
+            Discover ready-made automations that chain services together
           </p>
         </div>
         <Button asChild>
           <Link href="/workflows/create">
             <Plus className="size-4 mr-2" />
-            Create Workflow
+            Create Automation
           </Link>
         </Button>
       </div>
@@ -170,7 +170,7 @@ export function PublicWorkflowsView() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
-              placeholder="Search workflows..."
+              placeholder="Search automations..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-10 pr-10"
@@ -239,12 +239,12 @@ export function PublicWorkflowsView() {
             <div className="text-center">
               <Workflow className="size-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">
-                {hasFilters ? 'No workflows found' : 'No public workflows yet'}
+                {hasFilters ? 'No automations found' : 'No public automations yet'}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 {hasFilters
-                  ? 'No workflows match your filters. Try adjusting your search.'
-                  : 'Be the first to create a public workflow that AI agents can use.'}
+                  ? 'No automations match your filters. Try adjusting your search.'
+                  : 'Be the first to create a public automation that AI agents can use.'}
               </p>
               {hasFilters ? (
                 <Button variant="outline" onClick={clearFilters}>
@@ -254,7 +254,7 @@ export function PublicWorkflowsView() {
                 <Button asChild>
                   <Link href="/workflows/create">
                     <Plus className="size-4 mr-2" />
-                    Create Your First Workflow
+                    Create Your First Automation
                   </Link>
                 </Button>
               )}
@@ -266,7 +266,7 @@ export function PublicWorkflowsView() {
       {/* Total count */}
       {!isLoading && pagination.total > 0 && (
         <p className="text-sm text-muted-foreground text-center">
-          Showing {workflows.length} of {pagination.total} public workflows
+          Showing {workflows.length} of {pagination.total} public automations
         </p>
       )}
     </div>

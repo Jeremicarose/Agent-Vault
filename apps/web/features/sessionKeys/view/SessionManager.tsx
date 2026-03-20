@@ -54,7 +54,7 @@ export function SessionManager() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="size-5" />
-              HTS Payments
+              Spending Limits
             </CardTitle>
             <CardDescription>
               Your wallet has an incompatible smart account
@@ -109,10 +109,10 @@ export function SessionManager() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="size-5" />
-              HTS Payments
+              Spending Limits
             </CardTitle>
             <CardDescription>
-              Smart account required for automated API payments
+              Set up a smart wallet to enable automated payments
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -152,10 +152,10 @@ export function SessionManager() {
         <div>
           <CardTitle className="flex items-center gap-2">
             <Key className="size-5" />
-            HTS Payments
+            Spending Limits
           </CardTitle>
           <CardDescription>
-            Manage automated payment sessions
+            Control how much AI agents can spend on your behalf
           </CardDescription>
         </div>
         {!hasActiveSession && (
@@ -185,7 +185,7 @@ export function SessionManager() {
           </div>
         ) : sessions.length === 0 ? (
           <p className="text-center text-muted-foreground py-4">
-            No active sessions. Enable Payments to start using automated payments.
+            No spending limits set. Enable payments to allow AI agents to make transactions on your behalf.
           </p>
         ) : (
           <div className="space-y-3">

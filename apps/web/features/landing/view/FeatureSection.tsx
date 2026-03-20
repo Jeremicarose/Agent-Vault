@@ -14,39 +14,39 @@ import { ScrollAnimation } from '@/components/ui/scroll-animation'
 const features = [
   {
     icon: CreditCard,
-    title: 'AgentVault Protocol',
-    description: 'HTTP 402-based payment flow. Server returns payment details, client signs, and retries with payment proof in headers.',
-    badge: 'Payment Standard',
+    title: 'Pay-Per-Use Services',
+    description: 'AI agents pay only for what they use. No subscriptions, no API keys to manage — just automatic crypto payments per request.',
+    badge: 'Payments',
   },
   {
     icon: Key,
-    title: 'ERC-7702 Session Keys',
-    description: 'Scoped automatic payments with time-bounded, target-restricted smart account sessions. No approval popups for every call.',
-    badge: 'Smart Accounts',
+    title: 'Spending Limits',
+    description: 'Set budgets and permissions so AI agents can pay automatically within your limits. No approval popups for every call.',
+    badge: 'Control',
   },
   {
     icon: Globe,
-    title: 'API Proxies',
-    description: 'Monetize any existing API with crypto payments. Wrap your endpoints with AgentVault payment gates in minutes.',
-    badge: 'Monetization',
+    title: 'Monetize Any API',
+    description: 'Turn any existing API into a paid service in minutes. Set your price and start earning when AI agents use it.',
+    badge: 'Earn',
   },
   {
     icon: Workflow,
-    title: 'Composable Workflows',
-    description: 'Multi-step automation combining HTTP API calls with on-chain transactions. Create complex operations as reusable templates.',
+    title: 'Multi-Step Automations',
+    description: 'Chain API calls and blockchain transactions together. Build complex operations as reusable templates.',
     badge: 'Automation',
   },
   {
     icon: Server,
-    title: 'MCP Server Integration',
-    description: 'Model Context Protocol server for AI agents. Let LLMs discover and execute your APIs and workflows programmatically.',
-    badge: 'AI Integration',
+    title: 'AI Agent Hub',
+    description: 'Give AI agents (like Claude or ChatGPT) the ability to discover and use your services and automations.',
+    badge: 'AI Ready',
   },
   {
     icon: Wallet,
-    title: 'Gasless USDC Payments',
-    description: 'Pay with USDC on Hedera. Facilitator handles gas fees using EIP-3009 transferWithAuthorization.',
-    badge: 'User Experience',
+    title: 'USDC on Hedera',
+    description: 'Fast, low-cost payments with USDC stablecoin on the Hedera network. No gas fee headaches.',
+    badge: 'Simple',
   },
 ]
 
@@ -57,11 +57,11 @@ export function FeatureSection() {
         <ScrollAnimation animation="fade-up">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold">
-              Everything You Need for Agentic Payments
+              Everything AI Agents Need
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A complete toolkit for building AI-powered applications that can autonomously
-              pay for services and execute complex workflows.
+              Let AI agents discover services, pay for them automatically, and execute
+              multi-step tasks — all with your spending controls.
             </p>
           </div>
         </ScrollAnimation>

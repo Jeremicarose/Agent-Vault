@@ -12,20 +12,20 @@ import { HcsAuditTrail } from './HcsAuditTrail'
 const manageLinks = [
   {
     href: '/dashboard/apis',
-    title: 'APIs',
-    description: 'Create and manage your payment-gated API proxies',
+    title: 'Services',
+    description: 'Create and manage your paid API services',
     icon: Store,
   },
   {
     href: '/dashboard/mcp',
-    title: 'MCP Server',
-    description: 'Configure your MCP server for AI agent integration',
+    title: 'AI Agent Hub',
+    description: 'Set up your AI agent with tools and automations',
     icon: Server,
   },
   {
     href: '/dashboard/workflows',
-    title: 'Workflows',
-    description: 'Build and manage reusable workflow templates',
+    title: 'Automations',
+    description: 'Build multi-step automations that chain services together',
     icon: Workflow,
   },
 ]

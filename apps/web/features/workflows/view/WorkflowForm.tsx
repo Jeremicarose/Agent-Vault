@@ -1,6 +1,7 @@
 'use client'
 
-import { Plus, Trash2, Loader2, Wallet, ChevronUp, ChevronDown } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, Trash2, Loader2, Wallet, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react'
 import { useAppKit } from '@reown/appkit/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,6 +35,7 @@ export function WorkflowForm() {
   } = useWorkflowFormContext()
   const { isAuthenticated, isLoading: isAuthLoading } = useIsAuthenticated()
   const { open } = useAppKit()
+  const [showAdvanced, setShowAdvanced] = useState(isEditing)
 
   return (
     <form
@@ -47,11 +49,11 @@ export function WorkflowForm() {
       {/* Basic Info Section */}
       <Card>
         <CardHeader>
-          <CardTitle>{isEditing ? 'Edit Workflow' : 'Create Workflow'}</CardTitle>
+          <CardTitle>{isEditing ? 'Edit Automation' : 'Create Automation'}</CardTitle>
           <CardDescription>
             {isEditing
-              ? 'Update your workflow configuration'
-              : 'Create a workflow that combines HTTP calls and on-chain operations'}
+              ? 'Update your automation settings'
+              : 'Give it a name and add steps — you can refine the details later'}
           </CardDescription>
         </CardHeader>
 
@@ -68,28 +70,6 @@ export function WorkflowForm() {
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                  {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                    <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
-                  )}
-                </Field>
-              )}
-            </form.Field>
-
-            {/* Slug Field */}
-            <form.Field name="slug">
-              {(field) => (
-                <Field data-invalid={field.state.meta.errors.length > 0}>
-                  <FieldLabel htmlFor={field.name}>URL Slug</FieldLabel>
-                  <FieldDescription>
-                    Unique identifier for this workflow (lowercase, hyphens only)
-                  </FieldDescription>
-                  <Input
-                    id={field.name}
-                    placeholder="my-token-swap"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
                     <FieldError>{getErrorMessages(field.state.meta.errors)}</FieldError>
@@ -169,31 +149,46 @@ export function WorkflowForm() {
         moveStepDown={moveStepDown}
       />
 
-      {/* Output Mapping Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Output Mapping</CardTitle>
-          <CardDescription>
-            Map step outputs to workflow result fields
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <OutputMappingEditor />
-        </CardContent>
-      </Card>
+      {/* Advanced Configuration Toggle */}
+      <button
+        type="button"
+        onClick={() => setShowAdvanced(!showAdvanced)}
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-1"
+      >
+        {showAdvanced ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+        Advanced Configuration
+        <span className="text-xs font-normal">(output mapping, scope config)</span>
+      </button>
 
-      {/* Scope Configuration Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Scope Configuration</CardTitle>
-          <CardDescription>
-            Configure allowed contract addresses for dynamic targets in your workflow
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ScopeConfigEditor />
-        </CardContent>
-      </Card>
+      {showAdvanced && (
+        <>
+          {/* Output Mapping Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Output Mapping</CardTitle>
+              <CardDescription>
+                Map step outputs to workflow result fields
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OutputMappingEditor />
+            </CardContent>
+          </Card>
+
+          {/* Scope Configuration Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Scope Configuration</CardTitle>
+              <CardDescription>
+                Configure allowed contract addresses for dynamic targets in your workflow
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScopeConfigEditor />
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Form Actions */}
       <Card>
@@ -229,7 +224,7 @@ export function WorkflowForm() {
               return (
                 <Button type="submit" disabled={!canSubmit}>
                   {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Workflow' : 'Create Workflow'}
+                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Automation' : 'Create Automation'}
                 </Button>
               )
             }}

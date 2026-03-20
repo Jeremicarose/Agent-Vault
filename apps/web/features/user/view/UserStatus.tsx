@@ -14,17 +14,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUser } from '@/context/user'
 
-/**
- * Truncate an Ethereum address for display.
- */
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
-/**
- * Format a number with abbreviations and limited decimals.
- * e.g., 1000 = 1k, 1500000 = 1.5M
- */
 function formatCompactNumber(value: string | number): string {
   const num = typeof value === 'string' ? parseFloat(value) : value
   if (isNaN(num)) return '0'
@@ -38,10 +31,6 @@ function formatCompactNumber(value: string | number): string {
   return num.toFixed(3).replace(/\.?0+$/, '')
 }
 
-/**
- * Compact user status component showing wallet info with dropdown menu.
- * Shows "Sign In" button when not authenticated.
- */
 export function UserStatus() {
   const { session, formattedBalance, isLoading, signOut } = useUser()
   const { open } = useAppKit()

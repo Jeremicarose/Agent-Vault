@@ -77,9 +77,9 @@ export function WorkflowTestPanel({ workflow }: { workflow: WorkflowDetail }) {
   return (
     <Card className="sticky top-4">
       <CardHeader>
-        <CardTitle className="text-lg">Test Workflow</CardTitle>
+        <CardTitle className="text-lg">Test Automation</CardTitle>
         <CardDescription>
-          Enter input values and run a test execution
+          Enter values and run a test to see what would happen
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -138,7 +138,7 @@ export function WorkflowTestPanel({ workflow }: { workflow: WorkflowDetail }) {
           ) : (
             <>
               <Play className="size-4 mr-2" />
-              Dry Run
+              Test Run
             </>
           )}
         </Button>
@@ -287,8 +287,8 @@ export function WorkflowTestPanel({ workflow }: { workflow: WorkflowDetail }) {
 
         {/* Help Text */}
         <div className="text-xs text-muted-foreground pt-4 border-t space-y-1">
-          <p><strong>Dry Run:</strong> Simulates workflow execution without making actual API calls or on-chain transactions.</p>
-          <p>HTTP steps will be validated but not executed. On-chain steps will show what calldata would be generated.</p>
+          <p><strong>Test Run:</strong> Simulates the automation without actually calling APIs or moving any money.</p>
+          <p>API steps show what would be sent. Blockchain steps show what transactions would be created.</p>
         </div>
       </CardContent>
     </Card>

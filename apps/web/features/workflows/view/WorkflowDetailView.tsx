@@ -94,9 +94,9 @@ function ScopeAnalysisCard({ analysis }: { analysis: WorkflowScopeAnalysis }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Required Scopes</CardTitle>
+        <CardTitle className="text-lg">Required Permissions</CardTitle>
         <CardDescription>
-          On-chain permissions this workflow needs
+          Blockchain access this automation needs
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -299,9 +299,9 @@ export function WorkflowDetailView({ workflowId }: { workflowId: string }) {
           {/* Steps */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Workflow Steps</CardTitle>
+              <CardTitle className="text-lg">Automation Steps</CardTitle>
               <CardDescription>
-                {workflow.workflowDefinition.steps.length} step{workflow.workflowDefinition.steps.length !== 1 ? 's' : ''} in this workflow
+                {workflow.workflowDefinition.steps.length} step{workflow.workflowDefinition.steps.length !== 1 ? 's' : ''} in this automation
               </CardDescription>
             </CardHeader>
             <CardContent>

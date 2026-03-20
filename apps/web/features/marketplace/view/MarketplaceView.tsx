@@ -30,15 +30,15 @@ export function MarketplaceView() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">API Marketplace</h1>
+          <h1 className="text-3xl font-bold">Services</h1>
           <p className="text-muted-foreground mt-1">
-            Discover and use payment-gated APIs powered by AgentVault
+            Browse and use paid services that AI agents can access
           </p>
         </div>
         <Link href="/create">
           <Button className="gap-2">
             <Plus className="size-4" />
-            Create API
+            Add Service
           </Button>
         </Link>
       </div>
@@ -59,7 +59,7 @@ export function MarketplaceView() {
       {error && (
         <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 text-destructive">
           <AlertCircle className="size-5" />
-          <span>Failed to load APIs. Please try again.</span>
+          <span>Failed to load services. Please try again.</span>
         </div>
       )}
 
@@ -71,8 +71,8 @@ export function MarketplaceView() {
             isLoading={isLoading}
             emptyMessage={
               hasFilters
-                ? 'No APIs match your filters. Try adjusting your search criteria.'
-                : 'No APIs available yet. Be the first to create one!'
+                ? 'No services match your filters. Try adjusting your search.'
+                : 'No services available yet. Be the first to add one!'
             }
           />
 
@@ -82,7 +82,7 @@ export function MarketplaceView() {
               <Link href="/create">
                 <Button size="lg" className="gap-2">
                   <Plus className="size-5" />
-                  Create Your First API
+                  Add Your First Service
                 </Button>
               </Link>
             </div>

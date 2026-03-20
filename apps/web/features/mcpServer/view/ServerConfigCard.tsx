@@ -24,9 +24,9 @@ export function ServerConfigCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Server Configuration</CardTitle>
+        <CardTitle>Agent Configuration</CardTitle>
         <CardDescription>
-          Set up your MCP server endpoint and settings
+          Set up your AI agent&apos;s identity and settings
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -55,7 +55,7 @@ export function ServerConfigCard({
               id="name"
               value={formData.name}
               onChange={(e) => onFieldChange('name', e.target.value)}
-              placeholder="My MCP Server"
+              placeholder="My AI Agent"
             />
           </div>
         </div>
@@ -66,7 +66,7 @@ export function ServerConfigCard({
             id="description"
             value={formData.description}
             onChange={(e) => onFieldChange('description', e.target.value)}
-            placeholder="Describe what your MCP server provides..."
+            placeholder="Describe what your AI agent does..."
             rows={3}
           />
         </div>
@@ -95,9 +95,9 @@ export function ServerConfigCard({
               Saving...
             </>
           ) : hasServer ? (
-            'Update Server'
+            'Update Agent'
           ) : (
-            'Create Server'
+            'Create Agent'
           )}
         </Button>
       </CardContent>

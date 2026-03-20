@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentVault — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-card: #12121a;
+    --bg-elevated: #1a1a26;
+    --primary: #60a5fa;
+    --primary-dim: #3b82f640;
+    --accent: #34d399;
+    --accent-dim: #34d39930;
+    --text: #e4e4e7;
+    --text-dim: #a1a1aa;
+    --text-bright: #fafafa;
+    --border: #27272a;
+    --danger: #f87171;
+    --warning: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .slide {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, var(--primary-dim) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .slide > * { position: relative; z-index: 1; }
+
+  .slide-number {
+    position: absolute;
+    bottom: 30px;
+    right: 40px;
+    font-size: 14px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  .brand-footer {
+    position: absolute;
+    bottom: 30px;
+    left: 40px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  h1 {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text-bright);
+    letter-spacing: -1.5px;
+  }
+
+  h2 {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-bright);
+    letter-spacing: -1px;
+    margin-bottom: 32px;
+  }
+
+  h3 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    font-size: 22px;
+    color: var(--text-dim);
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 700px;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--primary-dim);
+    color: var(--primary);
+    background: var(--primary-dim);
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+  }
+
+  .card-accent {
+    border-color: var(--primary-dim);
+    background: linear-gradient(135deg, var(--bg-card), #12122a);
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; }
+
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tag-blue { background: #3b82f620; color: #93c5fd; }
+  .tag-green { background: #34d39920; color: #6ee7b7; }
+  .tag-purple { background: #a78bfa20; color: #c4b5fd; }
+  .tag-amber { background: #fbbf2420; color: #fde68a; }
+  .tag-red { background: #f8717120; color: #fca5a5; }
+
+  .stat-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--primary-dim);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .comparison-bad { color: var(--danger); }
+  .comparison-good { color: var(--accent); }
+
+  .code-block {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    overflow-x: auto;
+  }
+
+  .divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 2px;
+    margin: 24px 0;
+  }
+
+  ul { list-style: none; }
+  ul li {
+    padding: 8px 0;
+    padding-left: 24px;
+    position: relative;
+    color: var(--text);
+  }
+  ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--primary);
+  }
+
+  .hedera-grid-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .hedera-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .timeline-item:last-child { border-bottom: none; }
+
+  .link-card {
+    display: block;
+    padding: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .link-card:hover { border-color: var(--primary); }
+
+  @media print {
+    .slide {
+      page-break-after: always;
+      min-height: 100vh;
+      padding: 40px 50px;
+    }
+    .slide::before { display: none; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: Title -->
+<section class="slide" style="justify-content: center; align-items: center; text-align: center;">
+  <div>
+    <div class="badge">Hedera Hello Future Apex Hackathon 2026 &middot; AI & Agents Track</div>
+    <h1 style="font-size: 72px; margin-bottom: 20px;">
+      Agent<span class="gradient-text">Vault</span>
+    </h1>
+    <p class="subtitle" style="margin: 0 auto 40px; font-size: 28px;">
+      Agents with <span class="gradient-text" style="font-weight: 700;">limits.</span>
+    </p>
+    <p style="color: var(--text-dim); font-size: 16px;">
+      An agent-native execution fabric for Hedera
+    </p>
+    <div style="margin-top: 48px; color: var(--text-dim); font-size: 14px;">
+      Jeremi Carose &middot; Solo Developer &middot; March 2026
+    </div>
+  </div>
+  <span class="slide-number">01</span>
+</section>
+
+<!-- SLIDE 2: Team -->
+<section class="slide">
+  <h2>The Builder</h2>
+  <div class="grid-2" style="align-items: start;">
+    <div class="card card-accent">
+      <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+        <div style="width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: var(--bg);">JC</div>
+        <div>
+          <h3 style="margin-bottom: 2px;">Jeremi Carose</h3>
+          <p style="color: var(--text-dim); font-size: 14px;">Full-Stack Developer</p>
+        </div>
+      </div>
+      <p style="color: var(--text-dim); line-height: 1.7;">
+        Passionate about building at the intersection of AI and blockchain. Designed and built AgentVault end-to-end: smart contracts, web application, MCP server, workflow engine, and Hedera integrations.
+      </p>
+    </div>
+    <div>
+      <h3 style="margin-bottom: 16px;">Built Solo During This Hackathon</h3>
+      <ul>
+        <li>Smart contract deployed on Hedera Testnet</li>
+        <li>Full-stack Next.js 16 web application</li>
+        <li>MCP server with OAuth 2.1</li>
+        <li>Workflow engine with test runner</li>
+        <li>HCS audit trail + HCS-10 agent identity</li>
+        <li>API marketplace with live proxy system</li>
+      </ul>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">02</span>
+</section>
+
+<!-- SLIDE 3: Problem -->
+<section class="slide">
+  <span class="tag tag-red" style="margin-bottom: 16px;">THE PROBLEM</span>
+  <h2>AI agents need to act financially.<br>Current models are <span class="comparison-bad">broken.</span></h2>
+
+  <div class="grid-3" style="margin-top: 24px;">
+    <div class="card" style="border-color: #f8717140;">
+      <div style="font-size: 32px; margin-bottom: 16px;">&#128274;</div>
+      <h3>No Access</h3>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        AI agents can reason about financial decisions but can't execute them. They're stuck asking humans to click buttons.
+      </p>
+    </div>
+    <div class="card" style="border-color: #f8717140;">
+      <div style="font-size: 32px; margin-bottom: 16px;">&#128273;</div>
+      <h3>Full Key Access</h3>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Giving agents your private key = unlimited risk. One bug, one prompt injection, and your entire wallet is drained.
+      </p>
+    </div>
+    <div class="card" style="border-color: #f8717140;">
+      <div style="font-size: 32px; margin-bottom: 16px;">&#9888;&#65039;</div>
+      <h3>Hot Wallets</h3>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Custodial wrappers with unrestricted permissions. No scoping, no limits, no audit trail. A liability.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 40px; padding: 24px; background: #f8717110; border: 1px solid #f8717130; border-radius: 12px; text-align: center;">
+    <p style="font-size: 18px; font-weight: 600; color: #fca5a5;">
+      Powerful agents without boundaries are a liability.
+    </p>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">03</span>
+</section>
+
+<!-- SLIDE 4: Solution -->
+<section class="slide">
+  <span class="tag tag-green" style="margin-bottom: 16px;">THE SOLUTION</span>
+  <h2>Agents with <span class="gradient-text">limits.</span></h2>
+  <p class="subtitle" style="margin-bottom: 40px;">
+    AgentVault is a permissioned execution layer that lets AI agents safely interact with paid APIs and on-chain workflows on Hedera &mdash; without ever accessing a user's private keys.
+  </p>
+
+  <div class="grid-3">
+    <div class="card card-accent">
+      <span class="tag tag-blue" style="margin-bottom: 12px;">CONTROL</span>
+      <h3>Scoped Permissions</h3>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Session keys with explicit limits: which contracts, which methods, how much value, how long. Principle of least privilege.
+      </p>
+    </div>
+    <div class="card card-accent">
+      <span class="tag tag-green" style="margin-bottom: 12px;">EARN</span>
+      <h3>API Marketplace</h3>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Turn any API into a paid service. Set your price, agents pay per request. Usage-based economics.
+      </p>
+    </div>
+    <div class="card card-accent">
+      <span class="tag tag-purple" style="margin-bottom: 12px;">AI READY</span>
+      <h3>MCP Integration</h3>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Expose services as MCP servers. AI agents like Claude and ChatGPT discover and use them natively.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 32px; text-align: center;">
+    <p style="font-size: 18px; font-weight: 600; color: var(--accent);">
+      Autonomous execution, without autonomous risk.
+    </p>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">04</span>
+</section>
+
+<!-- SLIDE 5: How It Works -->
+<section class="slide">
+  <h2>How It Works</h2>
+  <p class="subtitle" style="margin-bottom: 40px;">Five steps from setup to safe agent execution.</p>
+
+  <div style="display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;">
+      <div class="step-number">1</div>
+      <div>
+        <h3 style="margin-bottom: 4px;">Define Services</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Register APIs and build multi-step automations (HTTP calls + on-chain transactions)</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;">
+      <div class="step-number">2</div>
+      <div>
+        <h3 style="margin-bottom: 4px;">Upgrade Account</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Standard wallet becomes a smart account that supports scoped session keys</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;">
+      <div class="step-number">3</div>
+      <div>
+        <h3 style="margin-bottom: 4px;">Create AI Agent Hub</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Expose selected services as an MCP server for AI agent discovery</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;">
+      <div class="step-number">4</div>
+      <div>
+        <h3 style="margin-bottom: 4px;">Set Spending Limits</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Generate a session key that restricts the agent to approved contracts, methods, and budgets</p>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 20px; padding: 20px; background: var(--bg-card); border: 1px solid var(--primary-dim); border-radius: 12px;">
+      <div class="step-number" style="background: var(--accent-dim); color: var(--accent);">5</div>
+      <div>
+        <h3 style="margin-bottom: 4px; color: var(--accent);">Agent Executes Safely</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">The agent discovers data, reasons, and executes &mdash; within strict boundaries. All actions audited on HCS.</p>
+      </div>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">05</span>
+</section>
+
+<!-- SLIDE 6: Architecture -->
+<section class="slide">
+  <h2>Core Architecture</h2>
+  <p class="subtitle" style="margin-bottom: 36px;">Five primitives that work together to enable bounded agent autonomy.</p>
+
+  <div class="grid-3" style="margin-bottom: 24px;">
+    <div class="card">
+      <span class="tag tag-blue" style="margin-bottom: 12px;">LAYER 1</span>
+      <h3>Smart Account</h3>
+      <p style="color: var(--text-dim); font-size: 13px;">Standard EOA upgraded to enforce session keys and scoped permissions on-chain. Primary key never shared.</p>
+    </div>
+    <div class="card">
+      <span class="tag tag-green" style="margin-bottom: 12px;">LAYER 2</span>
+      <h3>Session Keys</h3>
+      <p style="color: var(--text-dim); font-size: 13px;">Time-bounded, target-restricted keys. Define allowed contracts, methods, asset limits, and expiry.</p>
+    </div>
+    <div class="card">
+      <span class="tag tag-purple" style="margin-bottom: 12px;">LAYER 3</span>
+      <h3>API Proxies</h3>
+      <p style="color: var(--text-dim); font-size: 13px;">Any API wrapped as a paid service with encrypted headers, variable substitution, and usage tracking.</p>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <span class="tag tag-amber" style="margin-bottom: 12px;">LAYER 4</span>
+      <h3>Workflow Engine</h3>
+      <p style="color: var(--text-dim); font-size: 13px;">Multi-step automations combining HTTP API calls, data transforms, and on-chain transactions into reusable templates.</p>
+    </div>
+    <div class="card">
+      <span class="tag tag-blue" style="margin-bottom: 12px;">LAYER 5</span>
+      <h3>MCP Servers</h3>
+      <p style="color: var(--text-dim); font-size: 13px;">Model Context Protocol servers that expose services and automations for discovery by AI agents like Claude and ChatGPT.</p>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">06</span>
+</section>
+
+<!-- SLIDE 7: Hedera Integration (CRITICAL) -->
+<section class="slide">
+  <span class="tag tag-green" style="margin-bottom: 16px;">HEDERA INTEGRATION</span>
+  <h2>Deeply Integrated with Hedera</h2>
+  <p class="subtitle" style="margin-bottom: 32px;">AgentVault uses 5 Hedera services across the full stack.</p>
+
+  <div class="grid-2" style="gap: 16px;">
+    <div class="hedera-grid-item">
+      <div class="hedera-icon" style="background: #3b82f620; color: #60a5fa;">&#9939;</div>
+      <div>
+        <h3 style="font-size: 16px; margin-bottom: 4px;">HSCS &mdash; Smart Contracts</h3>
+        <p style="color: var(--text-dim); font-size: 13px;">AgentDelegator contract deployed on Hedera Testnet. Enforces session key permissions, manages grants and revocations on-chain.</p>
+        <div class="code-block" style="margin-top: 8px; font-size: 11px;">0x624f7c953dac044f3a38e7230c16f410cf7301d2</div>
+      </div>
+    </div>
+    <div class="hedera-grid-item">
+      <div class="hedera-icon" style="background: #34d39920; color: #34d399;">&#128220;</div>
+      <div>
+        <h3 style="font-size: 16px; margin-bottom: 4px;">HCS &mdash; Audit Trail</h3>
+        <p style="color: var(--text-dim); font-size: 13px;">Every workflow execution, payment, and tool invocation is logged to HCS topics. Queryable via Mirror Node REST API.</p>
+      </div>
+    </div>
+    <div class="hedera-grid-item">
+      <div class="hedera-icon" style="background: #a78bfa20; color: #a78bfa;">&#129302;</div>
+      <div>
+        <h3 style="font-size: 16px; margin-bottom: 4px;">HCS-10 &mdash; Agent Identity</h3>
+        <p style="color: var(--text-dim); font-size: 13px;">MCP server registered as HCS-10 compliant agent on Hashgraph Online registry with inbound/outbound/profile topics.</p>
+      </div>
+    </div>
+    <div class="hedera-grid-item">
+      <div class="hedera-icon" style="background: #fbbf2420; color: #fbbf24;">&#128176;</div>
+      <div>
+        <h3 style="font-size: 16px; margin-bottom: 4px;">HTS &mdash; Token Payments</h3>
+        <p style="color: var(--text-dim); font-size: 13px;">USDC payments via HTS-compatible ERC-20 transfers. Session keys enforce per-request payment limits.</p>
+      </div>
+    </div>
+    <div class="hedera-grid-item">
+      <div class="hedera-icon" style="background: #f4728820; color: #fb923c;">&#128269;</div>
+      <div>
+        <h3 style="font-size: 16px; margin-bottom: 4px;">Mirror Node &mdash; Verification</h3>
+        <p style="color: var(--text-dim); font-size: 13px;">HCS messages and transaction history queried via Mirror Node REST API. HashScan links for on-chain verification.</p>
+      </div>
+    </div>
+    <div class="hedera-grid-item">
+      <div class="hedera-icon" style="background: #3b82f620; color: #60a5fa;">&#9889;</div>
+      <div>
+        <h3 style="font-size: 16px; margin-bottom: 4px;">Hedera EVM &mdash; Execution</h3>
+        <p style="color: var(--text-dim); font-size: 13px;">executeWithSession relay via Hedera EVM. wagmi/viem configured with hederaTestnet chain. Gas-efficient execution.</p>
+      </div>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">07</span>
+</section>
+
+<!-- SLIDE 8: Demo -->
+<section class="slide">
+  <h2>Live Demo</h2>
+  <p class="subtitle" style="margin-bottom: 32px;">A working platform you can use today.</p>
+
+  <div class="grid-2" style="gap: 20px;">
+    <div class="card">
+      <span class="tag tag-blue" style="margin-bottom: 12px;">MARKETPLACE</span>
+      <h3>Browse Services</h3>
+      <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 12px;">
+        Discover paid APIs in the marketplace. Try the Token Price API &mdash; enter a token ID, click "Make Request", get real CoinGecko data proxied through AgentVault with payment tracking.
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag tag-green" style="margin-bottom: 12px;">AUTOMATIONS</span>
+      <h3>Multi-Step Workflows</h3>
+      <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 12px;">
+        Chain API calls with on-chain transactions. "Check Price & Transfer USDC" demo: fetches price, transforms data, executes transfer. Test Run shows simulated execution.
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag tag-purple" style="margin-bottom: 12px;">AI AGENT HUB</span>
+      <h3>MCP Server</h3>
+      <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 12px;">
+        Create an MCP server, attach services and automations. AI agents discover and invoke them via Model Context Protocol with OAuth 2.1 auth.
+      </p>
+    </div>
+    <div class="card">
+      <span class="tag tag-amber" style="margin-bottom: 12px;">DASHBOARD</span>
+      <h3>Manage & Monitor</h3>
+      <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 12px;">
+        Dashboard with spending limits, HCS audit trail, request logs, and management tools for your services, automations, and AI agent hubs.
+      </p>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">08</span>
+</section>
+
+<!-- SLIDE 9: Tech Stack -->
+<section class="slide">
+  <h2>Tech Stack</h2>
+  <div class="grid-2" style="gap: 24px;">
+    <div>
+      <h3 style="margin-bottom: 16px;">Frontend & API</h3>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>Next.js 16</strong> &mdash; React 19, App Router, Server Components</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>TailwindCSS 4</strong> + <strong>shadcn/ui</strong> &mdash; Design system</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>wagmi + viem</strong> &mdash; Wallet connection + contract interaction</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>Reown AppKit</strong> &mdash; WalletConnect + SIWE auth</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>Drizzle ORM</strong> &mdash; PostgreSQL type-safe queries</div>
+      </div>
+    </div>
+    <div>
+      <h3 style="margin-bottom: 16px;">Blockchain & AI</h3>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>Solidity</strong> &mdash; AgentDelegator smart contract (Hardhat)</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>@hashgraph/sdk</strong> &mdash; HCS topic management</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>@hashgraphonline/standards-sdk</strong> &mdash; HCS-10 identity</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>MCP Protocol</strong> &mdash; AI agent discovery + OAuth 2.1</div>
+        <div style="padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"><strong>pnpm monorepo</strong> &mdash; web + mcp-server + contracts</div>
+      </div>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">09</span>
+</section>
+
+<!-- SLIDE 10: Market Validation -->
+<section class="slide">
+  <h2>Why Now</h2>
+  <p class="subtitle" style="margin-bottom: 40px;">Three trends converging to create the need for AgentVault.</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="stat-value">10M+</div>
+      <div class="stat-label" style="margin-bottom: 16px;">MCP Server Installations (2025-2026)</div>
+      <div class="divider"></div>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Model Context Protocol adoption is exploding. Claude, ChatGPT, and open-source agents all support MCP. But none have safe payment infrastructure.
+      </p>
+    </div>
+    <div class="card">
+      <div class="stat-value">$2.3B+</div>
+      <div class="stat-label" style="margin-bottom: 16px;">AI Agent Market by 2027</div>
+      <div class="divider"></div>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        AI agents are moving from chatbots to autonomous actors. They need to pay for services, execute trades, and manage assets &mdash; safely.
+      </p>
+    </div>
+    <div class="card">
+      <div class="stat-value">$0.001</div>
+      <div class="stat-label" style="margin-bottom: 16px;">Hedera Transaction Fee</div>
+      <div class="divider"></div>
+      <p style="color: var(--text-dim); font-size: 14px;">
+        Hedera's sub-penny fees make micro-payments viable. Agents can make hundreds of API calls for cents. No other chain enables this economics.
+      </p>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">10</span>
+</section>
+
+<!-- SLIDE 11: What Was Built -->
+<section class="slide">
+  <h2>What Was Built</h2>
+  <p class="subtitle" style="margin-bottom: 32px;">Everything below was built during the hackathon period by a solo developer.</p>
+
+  <div class="grid-4">
+    <div style="text-align: center;">
+      <div class="stat-value">1</div>
+      <div class="stat-label">Smart Contract<br>Deployed on Testnet</div>
+    </div>
+    <div style="text-align: center;">
+      <div class="stat-value">30+</div>
+      <div class="stat-label">API Endpoints<br>Built</div>
+    </div>
+    <div style="text-align: center;">
+      <div class="stat-value">5</div>
+      <div class="stat-label">Hedera Services<br>Integrated</div>
+    </div>
+    <div style="text-align: center;">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Apps in<br>Monorepo</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 32px;">
+    <div class="grid-2" style="gap: 16px;">
+      <div class="card" style="padding: 20px;">
+        <h3 style="font-size: 15px; color: var(--accent);">Working Features</h3>
+        <ul style="font-size: 13px;">
+          <li>API marketplace with live proxy system</li>
+          <li>Token Price API (CoinGecko) end-to-end</li>
+          <li>Multi-step workflow engine with test runner</li>
+          <li>MCP server with OAuth 2.1 authentication</li>
+          <li>Session key management UI</li>
+          <li>HCS audit trail with Mirror Node queries</li>
+          <li>HCS-10 agent identity registration</li>
+        </ul>
+      </div>
+      <div class="card" style="padding: 20px;">
+        <h3 style="font-size: 15px; color: var(--primary);">Technical Highlights</h3>
+        <ul style="font-size: 13px;">
+          <li>Hybrid encryption for API credentials</li>
+          <li>Variable substitution in proxy templates</li>
+          <li>JSONPath expression resolver for workflows</li>
+          <li>Smart account compatibility detection</li>
+          <li>Facilitator relay for gasless execution</li>
+          <li>Scoped session permissions (per-contract, per-method)</li>
+          <li>Production build: ~1.5s page loads</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">11</span>
+</section>
+
+<!-- SLIDE 12: Roadmap -->
+<section class="slide">
+  <h2>Roadmap</h2>
+  <p class="subtitle" style="margin-bottom: 32px;">From hackathon to production infrastructure.</p>
+
+  <div style="display: flex; flex-direction: column; gap: 0;">
+    <div class="timeline-item">
+      <div>
+        <span class="tag tag-green">NOW</span>
+      </div>
+      <div>
+        <h3>Phase 1: Hackathon</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Core platform built. Smart contract deployed. API marketplace, workflow engine, MCP server, HCS audit trail all functional on Hedera Testnet.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div>
+        <span class="tag tag-blue">Q2 2026</span>
+      </div>
+      <div>
+        <h3>Phase 2: Mainnet + DeFi</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Deploy to Hedera Mainnet. Integrate SaucerSwap and HeliSwap for agent-driven token swaps. Real USDC payment settlement. Production monitoring.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div>
+        <span class="tag tag-purple">Q3 2026</span>
+      </div>
+      <div>
+        <h3>Phase 3: Multi-Agent Orchestration</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">Agent-to-agent communication via HCS-10. Agent reputation scoring based on on-chain execution history. Cross-agent workflow delegation.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div>
+        <span class="tag tag-amber">Q4 2026</span>
+      </div>
+      <div>
+        <h3>Phase 4: Institutional SDK</h3>
+        <p style="color: var(--text-dim); font-size: 14px;">TypeScript SDK for enterprises. Multi-sig session approval flows. Compliance-ready audit exports. Custom policy engines for institutional risk management.</p>
+      </div>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">12</span>
+</section>
+
+<!-- SLIDE 13: Demo Video -->
+<section class="slide" style="justify-content: center; align-items: center; text-align: center;">
+  <div>
+    <h2 style="margin-bottom: 24px;">Watch the Demo</h2>
+    <div style="width: 640px; max-width: 100%; aspect-ratio: 16/9; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px;">
+      <div>
+        <div style="font-size: 48px; margin-bottom: 12px;">&#9654;&#65039;</div>
+        <p style="color: var(--text-dim);">5-minute live demo walkthrough</p>
+        <p style="color: var(--primary); font-size: 14px; margin-top: 8px;">
+          <!-- UPDATE THIS LINK -->
+          youtube.com/watch?v=xfvH6TqvJd8
+        </p>
+      </div>
+    </div>
+    <p style="color: var(--text-dim); font-size: 14px; max-width: 500px; margin: 0 auto;">
+      Shows: Landing page &rarr; Marketplace &rarr; API try-it &rarr; Create automation &rarr; Session keys &rarr; HCS audit trail &rarr; HashScan verification
+    </p>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">13</span>
+</section>
+
+<!-- SLIDE 14: Links -->
+<section class="slide" style="justify-content: center; align-items: center; text-align: center;">
+  <div>
+    <h1 style="font-size: 56px; margin-bottom: 12px;">
+      Agent<span class="gradient-text">Vault</span>
+    </h1>
+    <p style="color: var(--text-dim); font-size: 18px; margin-bottom: 48px;">
+      Agents with limits. Built on Hedera.
+    </p>
+
+    <div class="grid-3" style="max-width: 700px; margin: 0 auto; gap: 20px;">
+      <a href="https://github.com/Jeremicarose/Agent-Vault" class="link-card" style="text-align: center;">
+        <div style="font-size: 28px; margin-bottom: 8px;">&#128187;</div>
+        <h3 style="margin-bottom: 4px; font-size: 16px;">Source Code</h3>
+        <p style="color: var(--primary); font-size: 12px;">GitHub</p>
+      </a>
+      <a href="#" class="link-card" style="text-align: center;">
+        <div style="font-size: 28px; margin-bottom: 8px;">&#127760;</div>
+        <h3 style="margin-bottom: 4px; font-size: 16px;">Live Demo</h3>
+        <p style="color: var(--primary); font-size: 12px;">agentvault.vercel.app</p>
+      </a>
+      <a href="https://hashscan.io/testnet/contract/0x624f7c953dac044f3a38e7230c16f410cf7301d2" class="link-card" style="text-align: center;">
+        <div style="font-size: 28px; margin-bottom: 8px;">&#128279;</div>
+        <h3 style="margin-bottom: 4px; font-size: 16px;">Smart Contract</h3>
+        <p style="color: var(--primary); font-size: 12px;">HashScan</p>
+      </a>
+    </div>
+
+    <div style="margin-top: 48px; color: var(--text-dim); font-size: 14px;">
+      Built by Jeremi Carose &middot; Hedera Hello Future Apex Hackathon 2026 &middot; AI & Agents Track
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">14</span>
+</section>
+
+</body>
+</html>

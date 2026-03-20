@@ -121,12 +121,13 @@ export function useApiTryIt({
       const typedVariables = convertVariables(variables, variablesSchema)
       const shouldSendBody = ['POST', 'PUT', 'PATCH'].includes(httpMethod.toUpperCase())
 
-      // Make request (payment header not yet implemented for Hedera)
+      // Make request — demo mode bypasses payment for testing
       const fetchResponse = await fetch(proxyUrl, {
         method: httpMethod,
         headers: {
           'Content-Type': 'application/json',
           'X-Variables': JSON.stringify(typedVariables),
+          'X-DEMO': 'true',
         },
         ...(shouldSendBody && requestBody ? { body: requestBody } : {}),
       })

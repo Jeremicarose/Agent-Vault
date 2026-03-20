@@ -54,14 +54,14 @@ export function McpServerDetailView({ slug }: McpServerDetailViewProps) {
     return (
       <div className="container py-8">
         <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">MCP Server Not Found</h2>
+          <h2 className="text-2xl font-bold mb-4">AI Agent Not Found</h2>
           <p className="text-muted-foreground mb-6">
-            This MCP server doesn&apos;t exist or is not publicly accessible.
+            This AI agent doesn&apos;t exist or is not publicly accessible.
           </p>
           <Link href="/mcp-servers">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="size-4" />
-              Browse MCP Servers
+              Browse AI Agents
             </Button>
           </Link>
         </div>
@@ -79,7 +79,7 @@ export function McpServerDetailView({ slug }: McpServerDetailViewProps) {
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="size-4" />
-        Back to MCP Servers
+        Back to AI Agents
       </Link>
 
       {/* Server Info */}

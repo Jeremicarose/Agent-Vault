@@ -16,16 +16,16 @@ export default async function CreatePage() {
         <Link href="/">
           <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="size-4" />
-            Back to Marketplace
+            Back to Services
           </Button>
         </Link>
       </div>
 
       {/* Page header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Create API</h1>
+        <h1 className="text-3xl font-bold">Add Service</h1>
         <p className="text-muted-foreground mt-1">
-          Set up a payment-gated API proxy using the AgentVault
+          Register an API as a paid service that AI agents can use
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export default async function CreatePage() {
               Connect Your Wallet
             </CardTitle>
             <CardDescription>
-              You need to connect your wallet to create an API. Your wallet address will be used to receive payments.
+              Connect your wallet to add a service. Your wallet address will be used to receive payments.
             </CardDescription>
           </CardHeader>
           <CardContent>

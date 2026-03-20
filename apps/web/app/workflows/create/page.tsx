@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import { CreateWorkflowClient } from './client'
 
 export const metadata: Metadata = {
-  title: 'Create Workflow | AgentVault',
-  description: 'Create a new workflow for AI agents',
+  title: 'Create Automation | AgentVault',
+  description: 'Create a new automation for AI agents',
 }
 
 export default function CreateWorkflowPage() {

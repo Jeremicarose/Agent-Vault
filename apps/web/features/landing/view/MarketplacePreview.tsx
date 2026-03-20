@@ -42,15 +42,15 @@ export function MarketplacePreview() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-12">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold">
-                Featured APIs
+                Featured Services
               </h2>
               <p className="text-lg text-muted-foreground mt-2">
-                Discover payment-gated APIs ready for your AI agents
+                Paid services ready for your AI agents to use
               </p>
             </div>
             <Link href="/explore">
               <Button variant="outline" className="gap-2">
-                View All APIs
+                View All Services
                 <ArrowRight className="size-4" />
               </Button>
             </Link>
@@ -70,10 +70,10 @@ export function MarketplacePreview() {
           ) : (
             <div className="text-center py-12 border rounded-lg bg-muted/50">
               <p className="text-muted-foreground mb-4">
-                No APIs available yet. Be the first to create one!
+                No services available yet. Be the first to add one!
               </p>
               <Link href="/create">
-                <Button>Create an API</Button>
+                <Button>Add a Service</Button>
               </Link>
             </div>
           )}

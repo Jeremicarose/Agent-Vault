@@ -4,8 +4,8 @@ import { Loader2 } from 'lucide-react'
 import { PublicWorkflowsView } from '@/features/workflows'
 
 export const metadata: Metadata = {
-  title: 'Workflows | AgentVault',
-  description: 'Discover reusable workflow templates for AI agents',
+  title: 'Automations | AgentVault',
+  description: 'Discover reusable automations for AI agents',
 }
 
 function WorkflowsLoading() {

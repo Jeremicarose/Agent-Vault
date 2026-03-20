@@ -15,6 +15,7 @@ export default function McpServerPage() {
 
   const isAuthenticated = session?.isAuthenticated
 
+  
   // Show loading while checking auth
   if (isLoading) {
     return (
@@ -35,7 +36,7 @@ export default function McpServerPage() {
             <Wallet className="size-12 mx-auto mb-4 text-muted-foreground" />
             <CardTitle>Connect Your Wallet</CardTitle>
             <CardDescription>
-              Connect your wallet to manage your MCP server.
+              Connect your wallet to set up your AI Agent Hub.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">

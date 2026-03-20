@@ -136,9 +136,9 @@ export function McpServerView() {
       <div className="flex items-center gap-4">
         <Server className="size-8" />
         <div>
-          <h1 className="text-3xl font-bold">MCP Server</h1>
+          <h1 className="text-3xl font-bold">AI Agent Hub</h1>
           <p className="text-muted-foreground mt-1">
-            Configure your Model Context Protocol server for AI agent integration
+            Set up your AI agent with the services and automations it can use
           </p>
         </div>
       </div>
