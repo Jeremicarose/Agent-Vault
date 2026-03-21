@@ -24,12 +24,17 @@ export function getRedisClient(): Redis {
   if (!instance) {
     const redisUrl = process.env.REDIS_URL
 
+    if (!redisUrl) {
+      console.warn('[Redis] REDIS_URL not set — using in-memory fallback (not for production)')
+    }
+
     // ioredis accepts full URL strings including auth and TLS settings
     // e.g., redis://:password@host:port or rediss://... for TLS
     instance = new Redis(redisUrl || 'redis://localhost:6379', {
       maxRetriesPerRequest: 3,
+      lazyConnect: !redisUrl,
       retryStrategy(times) {
-        if (times > 3) return null
+        if (!redisUrl || times > 3) return null
         return Math.min(times * 100, 3000)
       },
     })

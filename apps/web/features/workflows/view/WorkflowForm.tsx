@@ -192,43 +192,58 @@ export function WorkflowForm() {
 
       {/* Form Actions */}
       <Card>
-        <CardFooter className="flex justify-between gap-2 pt-6">
-          <form.Subscribe selector={(state) => state.isDirty}>
-            {(isDirty) => (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => form.reset()}
-                disabled={!isDirty}
-              >
-                Reset
-              </Button>
-            )}
+        <CardFooter className="flex flex-col gap-4 pt-6">
+          {/* Form-level errors */}
+          <form.Subscribe selector={(state) => state.errors}>
+            {(errors) =>
+              errors.length > 0 ? (
+                <div className="w-full rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive">
+                  {errors.map((error, i) => (
+                    <p key={i}>{typeof error === 'string' ? error : String(error)}</p>
+                  ))}
+                </div>
+              ) : null
+            }
           </form.Subscribe>
 
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
-            {([canSubmit, isSubmitting]) => {
-              if (!isAuthenticated) {
+          <div className="flex w-full justify-between gap-2">
+            <form.Subscribe selector={(state) => state.isDirty}>
+              {(isDirty) => (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => form.reset()}
+                  disabled={!isDirty}
+                >
+                  Reset
+                </Button>
+              )}
+            </form.Subscribe>
+
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+              {([canSubmit, isSubmitting]) => {
+                if (!isAuthenticated) {
+                  return (
+                    <Button type="button" onClick={() => open()} disabled={isAuthLoading}>
+                      {isAuthLoading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Wallet className="size-4" />
+                      )}
+                      {isAuthLoading ? 'Connecting...' : 'Sign In'}
+                    </Button>
+                  )
+                }
+
                 return (
-                  <Button type="button" onClick={() => open()} disabled={isAuthLoading}>
-                    {isAuthLoading ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Wallet className="size-4" />
-                    )}
-                    {isAuthLoading ? 'Connecting...' : 'Sign In'}
+                  <Button type="submit" disabled={!canSubmit}>
+                    {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                    {isSubmitting ? 'Saving...' : isEditing ? 'Update Automation' : 'Create Automation'}
                   </Button>
                 )
-              }
-
-              return (
-                <Button type="submit" disabled={!canSubmit}>
-                  {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                  {isSubmitting ? 'Saving...' : isEditing ? 'Update Automation' : 'Create Automation'}
-                </Button>
-              )
-            }}
-          </form.Subscribe>
+              }}
+            </form.Subscribe>
+          </div>
         </CardFooter>
       </Card>
     </form>

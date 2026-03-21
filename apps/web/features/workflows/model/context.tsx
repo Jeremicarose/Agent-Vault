@@ -36,6 +36,20 @@ function useWorkflowForm(options: UseWorkflowFormOptions = {}) {
       isPublic: initialValues?.isPublic ?? false,
       allowedDynamicTargets: initialValues?.allowedDynamicTargets ?? [] as AllowedDynamicTarget[],
     },
+    validators: {
+      onSubmit: ({ value }) => {
+        if (!value.name.trim()) return 'Name is required'
+        for (const step of value.steps) {
+          if (step.type === 'http' && !step.httpProxyId && !step.httpUrl) {
+            return `Step "${step.name || 'Untitled'}" needs a Proxy ID or URL`
+          }
+          if (step.type === 'onchain' && !step.onchainTarget) {
+            return `Step "${step.name || 'Untitled'}" needs a target contract`
+          }
+        }
+        return undefined
+      },
+    },
     onSubmit: async ({ value }) => {
       const workflowDefinition = formToWorkflowDefinition(value)
 
@@ -66,7 +80,9 @@ function useWorkflowForm(options: UseWorkflowFormOptions = {}) {
         if (text) {
           try {
             const error = JSON.parse(text)
-            errorMessage = error.error || error.message || errorMessage
+            errorMessage = error.details
+              ? `${error.error}: ${error.details.join(', ')}`
+              : error.error || error.message || errorMessage
           } catch {
             errorMessage = text || errorMessage
           }

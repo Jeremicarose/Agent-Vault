@@ -2,6 +2,26 @@
 
 **Agents with limits.**
 
+> **Hedera Hello Future Apex Hackathon 2026** — AI & Agents Track
+
+## Hackathon Submission
+
+| | |
+|---|---|
+| **Live Demo** | [agentvault.tools](https://agentvault.tools) |
+| **Pitch Deck** | [View HTML](/apps/web/public/pitch-deck.html) · [Download PDF](https://agentvault.tools/pitch-deck.html) |
+| **Demo Video** | [YouTube](https://youtube.com) *(link TBD)* |
+| **Smart Contract** | [`0x624f7c953dac044f3a38e7230c16f410cf7301d2`](https://hashscan.io/testnet/contract/0x624f7c953dac044f3a38e7230c16f410cf7301d2) |
+| **Track** | AI & Agents |
+| **Bounty** | Hashgraph Online |
+| **Developer** | Jeremi Carose |
+
+### Project Description (100 words)
+
+AgentVault is an agent-native execution fabric on Hedera that enables AI agents to safely interact with paid APIs and on-chain workflows using scoped, programmable permissions. Instead of sharing private keys, agents operate via session keys with explicit limits on protocols, assets, methods, and values. The platform includes a services marketplace, composable workflow engine, MCP server integration, and HCS-based audit trails. Smart contracts deployed on Hedera Testnet enforce session permissions on-chain, while HCS-10 provides agent identity registration. AgentVault delivers autonomous execution without autonomous risk — making Hedera a safe execution environment for AI agents.
+
+---
+
 AgentVault is an agent-native execution fabric that enables AI agents to safely interact with paid APIs and on-chain workflows on Hedera, using scoped, programmable permissions.
 
 Agents never access a user's primary private key.
