@@ -10,7 +10,7 @@ export interface SessionData {
 }
 
 const sessionOptions: SessionOptions = {
-  password: process.env.SESSION_SECRET!,
+  password: process.env.SESSION_SECRET || 'fallback-secret-for-build-only-min-32-chars',
   cookieName: 'agentvault_session',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
