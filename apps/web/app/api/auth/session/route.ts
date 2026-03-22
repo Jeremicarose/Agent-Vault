@@ -3,6 +3,8 @@ import { createSession, destroySession, getCurrentUser } from '@/lib/auth/sessio
 import { verifyNonce } from '@/lib/auth/nonce'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const createSessionSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid wallet address'),
   nonce: z.string().min(1, 'Nonce is required'),

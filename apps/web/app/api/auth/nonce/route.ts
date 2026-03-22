@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { generateNonce } from "@/lib/auth/nonce"
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/auth/nonce
  *
