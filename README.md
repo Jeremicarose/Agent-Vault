@@ -8,8 +8,8 @@
 
 | | |
 |---|---|
-| **Live Demo** | [agentvault.tools](https://agentvault.tools) |
-| **Pitch Deck** | [View HTML](/apps/web/public/pitch-deck.html) · [Download PDF](https://agentvault.tools/pitch-deck.html) |
+| **Live Demo** | [agentvault.tools](https://agent-vault-web-jeremicaroses-projects.vercel.app) |
+| **Pitch Deck** | [View HTML](/apps/web/public/pitch-deck.html) · [Download PDF](https://agent-vault-web-jeremicaroses-projects.vercel.app/pitch-deck.html) |
 | **Demo Video** | [YouTube](https://youtube.com) *(link TBD)* |
 | **Smart Contract** | [`0x624f7c953dac044f3a38e7230c16f410cf7301d2`](https://hashscan.io/testnet/contract/0x624f7c953dac044f3a38e7230c16f410cf7301d2) |
 | **Track** | AI & Agents |
@@ -264,5 +264,5 @@ MIT
 
 ## Links
 
-- Website: https://agentvault.tools
+- Website: https://agent-vault-web-jeremicaroses-projects.vercel.app
 - Source Code: https://github.com/Jeremicarose/Agent-Vault
