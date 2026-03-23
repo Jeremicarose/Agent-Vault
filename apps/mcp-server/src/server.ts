@@ -247,9 +247,21 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
     const auth = await validateBearerToken(authHeader)
 
     if (!auth) {
+      // In local dev mode, allow unauthenticated access with a default context
+      const isLocalDev = process.env.NODE_ENV !== 'production' || process.env.MCP_DEV_MODE === 'true'
+      if (isLocalDev) {
+        console.log(`[MCP] Dev mode: allowing unauthenticated access for slug "${slug}"`)
+        req.mcpAuth = {
+          userId: 'dev-user',
+          walletAddress: '0x0000000000000000000000000000000000000000',
+          scopes: ['hts:payments', 'mcp:tools', 'workflow:token-approvals'],
+          mcpSlug: slug,
+        }
+        next()
+        return
+      }
+
       // MCP OAuth requires WWW-Authenticate header with resource_metadata URL
-      // See: https://spec.modelcontextprotocol.io/specification/2025-03-26/basic/authorization/
-      // Use slug-specific resource metadata URL so client discovers slug-aware authorization endpoint
       const publicUrl = getPublicUrl(req)
       const resourceMetadataUrl = `${publicUrl}/mcp/${slug}/.well-known/oauth-protected-resource`
       res.setHeader('WWW-Authenticate', `Bearer resource_metadata="${resourceMetadataUrl}"`)

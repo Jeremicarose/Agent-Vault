@@ -122,19 +122,29 @@ export function createProxyTool(toolConfig: ToolConfig): McpToolDefinition {
           }
         }
 
-        // Build the payment header using the session key
-        const paymentHeader = await buildPaymentForProxy(
-          context.auth.session,
-          proxy,
-          context.chainId
-        )
-
-        // Call the proxy endpoint with the payment
+        // Call the proxy endpoint
         const proxyUrl = `${context.nextAppUrl}/api/proxy/${proxy.id}`
 
         const headers: Record<string, string> = {
-          'X-PAYMENT': paymentHeader,
           'Content-Type': 'application/json',
+        }
+
+        // Build the payment header using the session key (skip in dev mode)
+        if (context.auth.session) {
+          try {
+            const paymentHeader = await buildPaymentForProxy(
+              context.auth.session,
+              proxy,
+              context.chainId
+            )
+            headers['X-PAYMENT'] = paymentHeader
+          } catch (payErr) {
+            console.warn('[ProxyTool] Payment header failed, using demo mode:', payErr)
+            headers['X-DEMO'] = 'true'
+          }
+        } else {
+          // Dev mode - no session, use demo bypass
+          headers['X-DEMO'] = 'true'
         }
 
         // Add variables as X-Variables header
@@ -189,14 +199,16 @@ export function createProxyTool(toolConfig: ToolConfig): McpToolDefinition {
         const responseText = await response.text()
 
         // Log tool invocation to HCS (fire-and-forget)
-        logToolInvocation({
-          agent: context.auth.session.sessionKeyAddress,
-          owner: context.auth.session.userId,
-          sessionId: context.auth.session.sessionId,
-          toolName: toolConfig.name,
-          proxyId: toolConfig.proxyId,
-          chainId: context.chainId,
-        }).catch(err => console.error('[HCS] Tool audit log failed:', err))
+        if (context.auth.session) {
+          logToolInvocation({
+            agent: context.auth.session.sessionKeyAddress,
+            owner: context.auth.session.userId,
+            sessionId: context.auth.session.sessionId,
+            toolName: toolConfig.name,
+            proxyId: toolConfig.proxyId,
+            chainId: context.chainId,
+          }).catch(err => console.error('[HCS] Tool audit log failed:', err))
+        }
 
         // Try to parse as JSON and format nicely
         try {
