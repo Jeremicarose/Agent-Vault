@@ -322,11 +322,32 @@ export function useAuthorization() {
         targets: (s as ExecuteScope).targets?.map(t => ({ address: t.address, name: t.name })),
       })))
 
-      // Step 1: Create session key
-      const sessionId = await grantSession({
-        validityDays: parseInt(formState.validityDays),
-        scopes: selectedScopes,
-      })
+      // Step 1: Create session key (off-chain for demo/testnet)
+      let sessionId: string
+      try {
+        sessionId = await grantSession({
+          validityDays: parseInt(formState.validityDays),
+          scopes: selectedScopes,
+        })
+      } catch (grantError) {
+        // If on-chain grant fails (e.g. no smart account), create session off-chain
+        console.warn('[approveMutation] On-chain grant failed, creating off-chain session:', grantError)
+        const res = await fetch('/api/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            offchain: true,
+            validityDays: parseInt(formState.validityDays),
+            scopes: selectedScopes.map(s => ({ id: s.id, type: s.type, name: s.name })),
+          }),
+        })
+        if (!res.ok) {
+          const err = await res.json()
+          throw new Error(err.error || 'Failed to create off-chain session')
+        }
+        const data = await res.json()
+        sessionId = data.sessionId
+      }
       console.log('[approveMutation] Session created:', sessionId)
 
       // Step 2: Create authorization code

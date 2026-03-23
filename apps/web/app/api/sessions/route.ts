@@ -18,6 +18,45 @@ import type { SerializedSessionScope, OnChainParams } from '@/lib/sessionKeys/ty
 export const POST = withAuth(async (user, request) => {
   const body = await request.json()
 
+  // Off-chain session creation (for demo/testnet when no smart account)
+  if (body.offchain) {
+    const { randomBytes } = await import('crypto')
+    const offchainSessionId = '0x' + randomBytes(32).toString('hex')
+    const offchainKeyAddress = '0x' + randomBytes(20).toString('hex')
+    const validAfterDate = new Date()
+    const validUntilDate = new Date(Date.now() + (body.validityDays || 7) * 24 * 60 * 60 * 1000)
+
+    const scopeEntries = Array.isArray(body.scopes) ? body.scopes.map((s: { id: string; type: string; name: string }) => ({
+      id: s.id,
+      type: s.type || 'eip712',
+      name: s.name || s.id,
+      description: '',
+      budgetEnforceable: false,
+    })) : []
+
+    const [session] = await db.insert(sessionKeys).values({
+      userId: user.id,
+      sessionId: offchainSessionId,
+      sessionKeyAddress: offchainKeyAddress,
+      encryptedPrivateKey: { encryptedKey: '', iv: '', ciphertext: '', tag: '' },
+      scopes: scopeEntries,
+      allowedTargets: [],
+      allowedSelectors: [],
+      validAfter: validAfterDate,
+      validUntil: validUntilDate,
+      approvedContracts: [],
+      isActive: true,
+    }).returning()
+
+    console.log('[POST /api/sessions] Off-chain session created:', session.sessionId)
+
+    return NextResponse.json({
+      success: true,
+      sessionId: session.sessionId,
+      validUntil: session.validUntil.toISOString(),
+    }, { status: 201 })
+  }
+
   const {
     sessionId,
     sessionKeyAddress,
