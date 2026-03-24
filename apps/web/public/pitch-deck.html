@@ -591,7 +591,52 @@
   <span class="slide-number">08</span>
 </section>
 
-<!-- SLIDE 9: Tech Stack -->
+<!-- SLIDE 8B: Claude MCP Demo -->
+<section class="slide">
+  <span class="tag tag-purple" style="margin-bottom: 16px;">AI IN ACTION</span>
+  <h2>Claude Discovers &amp; Uses AgentVault Tools</h2>
+  <p class="subtitle" style="margin-bottom: 32px;">Real MCP integration &mdash; Claude autonomously discovers and calls AgentVault services.</p>
+
+  <div class="grid-2" style="gap: 24px;">
+    <div>
+      <div class="code-block" style="font-size: 12px; line-height: 1.8; white-space: pre-wrap; margin-bottom: 16px;"><span style="color: #6ee7b7;">User:</span> "What's the current price of HBAR and look up
+account 0.0.1022530 on Hedera testnet"
+
+<span style="color: #93c5fd;">Claude:</span> I'll use two AgentVault tools for this.
+
+<span style="color: #fde68a;">Tool call:</span> mcp__agentvault__token_price_api
+  tokenId: "hedera-hashgraph"
+<span style="color: #fde68a;">Result:</span> { usd: 0.0926, usd_24h_change: 3.01% }
+
+<span style="color: #fde68a;">Tool call:</span> mcp__agentvault__hedera_account_balance
+  accountId: "0.0.1022530"
+<span style="color: #fde68a;">Result:</span> { balance: 100 HBAR, tokens: [...] }
+
+<span style="color: #93c5fd;">Claude:</span> HBAR is trading at $0.0926 (+3.01%).
+Account 0.0.1022530 holds 100 HBAR (~$9.26).</div>
+    </div>
+    <div>
+      <h3 style="margin-bottom: 16px;">What's Happening</h3>
+      <ul style="font-size: 14px;">
+        <li>Claude connects via <strong>MCP stdio transport</strong></li>
+        <li>Tools are loaded dynamically from the database</li>
+        <li>Proxy fetches live data from CoinGecko &amp; Mirror Node</li>
+        <li>Session key limits what the agent can access</li>
+        <li>Every call logged to HCS audit trail</li>
+        <li>No API keys or private keys shared with the AI</li>
+      </ul>
+      <div style="margin-top: 24px; padding: 16px; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 12px;">
+        <p style="font-size: 14px; color: var(--accent); font-weight: 600;">
+          This is not a mock. These are real API calls executed by Claude through AgentVault's MCP server.
+        </p>
+      </div>
+    </div>
+  </div>
+  <span class="brand-footer">AgentVault</span>
+  <span class="slide-number">09</span>
+</section>
+
+<!-- SLIDE 10: Tech Stack -->
 <section class="slide">
   <h2>Tech Stack</h2>
   <div class="grid-2" style="gap: 24px;">
@@ -617,10 +662,10 @@
     </div>
   </div>
   <span class="brand-footer">AgentVault</span>
-  <span class="slide-number">09</span>
+  <span class="slide-number">10</span>
 </section>
 
-<!-- SLIDE 10: Market Validation -->
+<!-- SLIDE 11: Market Validation -->
 <section class="slide">
   <h2>Why Now</h2>
   <p class="subtitle" style="margin-bottom: 40px;">Three trends converging to create the need for AgentVault.</p>
@@ -652,10 +697,10 @@
     </div>
   </div>
   <span class="brand-footer">AgentVault</span>
-  <span class="slide-number">10</span>
+  <span class="slide-number">11</span>
 </section>
 
-<!-- SLIDE 11: What Was Built -->
+<!-- SLIDE 12: What Was Built -->
 <section class="slide">
   <h2>What Was Built</h2>
   <p class="subtitle" style="margin-bottom: 32px;">Everything below was built during the hackathon period by a solo developer.</p>
@@ -708,10 +753,10 @@
     </div>
   </div>
   <span class="brand-footer">AgentVault</span>
-  <span class="slide-number">11</span>
+  <span class="slide-number">12</span>
 </section>
 
-<!-- SLIDE 12: Roadmap -->
+<!-- SLIDE 13: Roadmap -->
 <section class="slide">
   <h2>Roadmap</h2>
   <p class="subtitle" style="margin-bottom: 32px;">From hackathon to production infrastructure.</p>
@@ -755,10 +800,10 @@
     </div>
   </div>
   <span class="brand-footer">AgentVault</span>
-  <span class="slide-number">12</span>
+  <span class="slide-number">13</span>
 </section>
 
-<!-- SLIDE 13: Demo Video -->
+<!-- SLIDE 14: Demo Video -->
 <section class="slide" style="justify-content: center; align-items: center; text-align: center;">
   <div>
     <h2 style="margin-bottom: 24px;">Watch the Demo</h2>
@@ -768,7 +813,7 @@
         <p style="color: var(--text-dim);">5-minute live demo walkthrough</p>
         <p style="color: var(--primary); font-size: 14px; margin-top: 8px;">
           <!-- UPDATE THIS LINK -->
-          youtube.com/watch?v=xfvH6TqvJd8
+          youtube.com/watch?
         </p>
       </div>
     </div>
@@ -777,10 +822,10 @@
     </p>
   </div>
   <span class="brand-footer">AgentVault</span>
-  <span class="slide-number">13</span>
+  <span class="slide-number">14</span>
 </section>
 
-<!-- SLIDE 14: Links -->
+<!-- SLIDE 15: Links -->
 <section class="slide" style="justify-content: center; align-items: center; text-align: center;">
   <div>
     <h1 style="font-size: 56px; margin-bottom: 12px;">
@@ -813,7 +858,7 @@
     </div>
   </div>
   <span class="brand-footer">AgentVault</span>
-  <span class="slide-number">14</span>
+  <span class="slide-number">15</span>
 </section>
 
 </body>
