@@ -9,7 +9,7 @@
 | | |
 |---|---|
 | **Live Demo** | [agent-vault-web.vercel.app](https://agent-vault-web-jeremicaroses-projects.vercel.app) |
-| **Demo Video** | [YouTube](https://youtube.com) *(link TBD)* |
+| **Demo Video** | [YouTube](https://youtu.be/NyGqEoTo7u4) |
 | **Smart Contract** | [`0x624f7c953dac044f3a38e7230c16f410cf7301d2`](https://hashscan.io/testnet/contract/0x624f7c953dac044f3a38e7230c16f410cf7301d2) |
 | **Track** | AI & Agents |
 | **Bounty** | Hashgraph Online |
