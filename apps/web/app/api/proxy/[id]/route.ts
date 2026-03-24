@@ -188,7 +188,8 @@ async function proxyToTarget(
     }
   }
 
-  let targetUrl = proxy.targetUrl
+  // Substitute variables in targetUrl (supports path params like /accounts/{{accountId}})
+  let targetUrl = substituteVariables(proxy.targetUrl, extractedVariables, variablesSchema)
   if (proxy.queryParamsTemplate) {
     const substitutedParams = substituteVariables(proxy.queryParamsTemplate, extractedVariables, variablesSchema)
     // Convert JSON object to URL query string, or use as-is if already a query string

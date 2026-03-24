@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, workflowTemplates } from '@/lib/db'
 import { eq, and } from 'drizzle-orm'
-import { withAuth } from '@/lib/auth'
 import type { WorkflowDefinition, WorkflowStep, OnchainOperation } from '@/lib/db/schema'
 import { encodeFunctionData, parseAbiItem } from 'viem'
 
@@ -445,28 +444,51 @@ function runDryTest(
 /**
  * POST /api/workflows/[id]/test
  *
- * Run a test execution of the workflow
+ * Run a test execution of the workflow.
+ * Supports X-DEMO header for unauthenticated testing (MCP stdio bridge).
  */
-export const POST = withAuth(async (user, request, context) => {
+async function handleWorkflowTest(request: NextRequest, context: unknown) {
   const { id } = await (context as RouteParams).params
-  const body = await request.json()
-  const { inputs, dryRun = true } = body
+  const isDemoMode = request.headers.get('X-DEMO') === 'true'
 
-  // Fetch the workflow — check ownership first, then fall back to public workflows
-  let workflow = await db.query.workflowTemplates.findFirst({
-    where: and(
-      eq(workflowTemplates.id, id),
-      eq(workflowTemplates.userId, user.id)
-    ),
-  })
+  let userId: string | undefined
+  let walletAddress = '0x0000000000000000000000000000000000000000'
+
+  if (isDemoMode) {
+    console.log('[Workflow Test] Demo mode — auth skipped')
+  } else {
+    const { getCurrentUser } = await import('@/lib/auth/session')
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    userId = user.id
+    walletAddress = user.walletAddress
+  }
+
+  const body = await request.json()
+  const { inputs, input, dryRun = true } = body
+  const testInputs = inputs || input || {}
+
+  // Fetch the workflow
+  let workflow = userId
+    ? await db.query.workflowTemplates.findFirst({
+        where: and(
+          eq(workflowTemplates.id, id),
+          eq(workflowTemplates.userId, userId)
+        ),
+      })
+    : null
 
   if (!workflow) {
-    // Allow testing public workflows the user doesn't own
+    // Allow testing public workflows (or any workflow in demo mode)
     workflow = await db.query.workflowTemplates.findFirst({
-      where: and(
-        eq(workflowTemplates.id, id),
-        eq(workflowTemplates.isPublic, true)
-      ),
+      where: isDemoMode
+        ? eq(workflowTemplates.id, id)
+        : and(
+            eq(workflowTemplates.id, id),
+            eq(workflowTemplates.isPublic, true)
+          ),
     })
   }
 
@@ -485,9 +507,13 @@ export const POST = withAuth(async (user, request, context) => {
   // Run the test
   const result = runDryTest(
     workflow.workflowDefinition,
-    inputs || {},
-    user.walletAddress
+    testInputs,
+    walletAddress
   )
 
   return NextResponse.json(result)
-})
+}
+
+export async function POST(request: NextRequest, context: RouteParams) {
+  return handleWorkflowTest(request, context)
+}
