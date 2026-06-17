@@ -24,6 +24,10 @@ interface TestResult {
   error?: string
 }
 
+function isDemoModeAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production'
+}
+
 /**
  * Resolve a JSONPath expression against the context
  * Supports: $.input.X, $.steps.Y.output.Z, $.wallet, $.chainId
@@ -449,7 +453,15 @@ function runDryTest(
  */
 async function handleWorkflowTest(request: NextRequest, context: unknown) {
   const { id } = await (context as RouteParams).params
-  const isDemoMode = request.headers.get('X-DEMO') === 'true'
+  const requestedDemoMode = request.headers.get('X-DEMO') === 'true'
+  const isDemoMode = requestedDemoMode && isDemoModeAllowed()
+
+  if (requestedDemoMode && !isDemoModeAllowed()) {
+    return NextResponse.json(
+      { error: 'Demo mode is not allowed in production' },
+      { status: 403 }
+    )
+  }
 
   let userId: string | undefined
   let walletAddress = '0x0000000000000000000000000000000000000000'

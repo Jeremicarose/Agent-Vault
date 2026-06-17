@@ -1,6 +1,6 @@
 'use client'
 
-import { type ReactNode, useState, useEffect } from 'react'
+import { type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
@@ -36,16 +36,9 @@ export function Web3Shell({
   initialState?: unknown
 }) {
   const pathname = usePathname()
-  const [web3Loaded, setWeb3Loaded] = useState(false)
-
   const needsWeb3 = WEB3_ROUTES.some(route => pathname.startsWith(route))
 
-  // Once Web3 is loaded, keep it loaded (don't unload on navigation)
-  useEffect(() => {
-    if (needsWeb3) setWeb3Loaded(true)
-  }, [needsWeb3])
-
-  if (web3Loaded || needsWeb3) {
+  if (needsWeb3) {
     return (
       <Web3Provider initialState={initialState as never}>
         {children}

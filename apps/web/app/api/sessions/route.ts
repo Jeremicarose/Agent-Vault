@@ -5,6 +5,10 @@ import { withAuth } from '@/lib/auth'
 import type { HybridEncryptedData } from '@/lib/crypto/encryption'
 import type { SerializedSessionScope, OnChainParams } from '@/lib/sessionKeys/types'
 
+function isOffchainSessionAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production'
+}
+
 /**
  * POST /api/sessions - Create a new session key record
  *
@@ -20,6 +24,12 @@ export const POST = withAuth(async (user, request) => {
 
   // Off-chain session creation (for demo/testnet when no smart account)
   if (body.offchain) {
+    if (!isOffchainSessionAllowed()) {
+      return NextResponse.json({
+        error: 'Off-chain session creation is disabled in production',
+      }, { status: 403 })
+    }
+
     const { randomBytes } = await import('crypto')
     const offchainSessionId = '0x' + randomBytes(32).toString('hex')
     const offchainKeyAddress = '0x' + randomBytes(20).toString('hex')

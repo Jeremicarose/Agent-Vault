@@ -184,10 +184,10 @@ export function ProxyManagementCard({
       {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete API</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{proxy.name}"? This action cannot be undone.
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete API</AlertDialogTitle>
+              <AlertDialogDescription>
+              Are you sure you want to delete &quot;{proxy.name}&quot;? This action cannot be undone.
               All request logs for this API will also be deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>

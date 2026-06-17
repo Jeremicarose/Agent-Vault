@@ -38,7 +38,6 @@ export function ApiTryIt({
 
   // Session state (smart account not needed on Hedera)
   const isSmartAccountEnabled = true
-  const smartAccountStatus = 'enabled' as const
   const { sessions, isLoading: isLoadingSessions } = useSessions()
   const activeSession = sessions[0] // Use first active session
 
@@ -241,23 +240,15 @@ export function ApiTryIt({
         <div className="flex items-center gap-4">
           <Button
             onClick={handleTryIt}
-            disabled={
-              isLoading ||
-              smartAccountStatus === 'enabling' ||
-              (useSession && !activeSession && !isLoadingSessions && isSmartAccountEnabled)
-            }
-            className="gap-2"
-          >
-            {smartAccountStatus === 'enabling' ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Enabling Smart Account...
-              </>
-            ) : (
-              getButtonContent()
-            )}
-          </Button>
-        </div>
+              disabled={
+                isLoading ||
+                (useSession && !activeSession && !isLoadingSessions && isSmartAccountEnabled)
+              }
+              className="gap-2"
+            >
+              {getButtonContent()}
+            </Button>
+          </div>
 
         {/* Error */}
         {error && (

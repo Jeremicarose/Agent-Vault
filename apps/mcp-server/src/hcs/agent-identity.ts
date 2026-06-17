@@ -2,11 +2,12 @@
  * HCS-10 Agent Identity Registration
  *
  * Registers the AgentVault MCP server as an HCS-10 compliant agent
- * on the Hashgraph Online registry, enabling discoverability and
- * inter-agent communication via Hedera Consensus Service.
+ * when HCS credentials are available. This module is currently a
+ * best-effort integration and must fail safely when the registry
+ * client or environment configuration is unavailable.
  */
 
-import { HCS10Client, AgentBuilder, AIAgentCapability } from '@hashgraphonline/standards-sdk'
+import { HCS10Client } from '@hashgraphonline/standards-sdk'
 
 export interface AgentIdentityConfig {
   operatorId: string
@@ -24,13 +25,13 @@ export interface AgentIdentityInfo {
 let hcs10Client: HCS10Client | null = null
 let agentInfo: AgentIdentityInfo | null = null
 
-/**
- * Get HCS-10 configuration from environment
- */
 function getConfig(): AgentIdentityConfig | null {
   const operatorId = process.env.HCS_OPERATOR_ID
   const operatorKey = process.env.HCS_OPERATOR_KEY
-  if (!operatorId || !operatorKey) return null
+
+  if (!operatorId || !operatorKey) {
+    return null
+  }
 
   return {
     operatorId,
@@ -40,13 +41,17 @@ function getConfig(): AgentIdentityConfig | null {
 }
 
 /**
- * Initialize the HCS-10 client
+ * Lazily initialize the HCS-10 client.
  */
 export function getHCS10Client(): HCS10Client | null {
-  if (hcs10Client) return hcs10Client
+  if (hcs10Client) {
+    return hcs10Client
+  }
 
   const config = getConfig()
-  if (!config) return null
+  if (!config) {
+    return null
+  }
 
   hcs10Client = new HCS10Client({
     network: config.network,
@@ -59,17 +64,21 @@ export function getHCS10Client(): HCS10Client | null {
 }
 
 /**
- * Register AgentVault as an HCS-10 agent
+ * Register AgentVault as an HCS-10 agent.
  *
- * Creates topics, stores HCS-11 profile, and registers on the
- * Hashgraph Online registry.
+ * The current implementation supports:
+ * - returning previously configured topic IDs from environment
+ * - initializing the HCS-10 client when config is present
+ * - failing safely when dynamic registration is not yet wired
+ *
+ * This keeps the runtime and build healthy until full registry
+ * integration is completed.
  */
 export async function registerAgent(params?: {
   name?: string
   description?: string
   mcpEndpoint?: string
 }): Promise<AgentIdentityInfo | null> {
-  // Check if already registered
   const existingInbound = process.env.HCS10_INBOUND_TOPIC_ID
   const existingOutbound = process.env.HCS10_OUTBOUND_TOPIC_ID
   const existingProfile = process.env.HCS10_PROFILE_TOPIC_ID
@@ -87,74 +96,22 @@ export async function registerAgent(params?: {
 
   const client = getHCS10Client()
   if (!client) {
-    console.warn('[HCS-10] Not configured — agent registration skipped')
+    console.warn('[HCS-10] Not configured - agent registration skipped')
     return null
   }
 
-  try {
-    const builder = new AgentBuilder()
-    builder.setName(params?.name || 'AgentVault MCP Server')
-    builder.setBio(
-      params?.description ||
-      'Agent-native execution fabric for Hedera. Enables AI agents to safely execute ' +
-      'paid API calls and on-chain transactions with scoped session key permissions.'
-    )
-    builder.setCapabilities([
-      AIAgentCapability.KNOWLEDGE_RETRIEVAL,
-      AIAgentCapability.TRANSACTION_ANALYTICS,
-      AIAgentCapability.API_INTEGRATION,
-      AIAgentCapability.WORKFLOW_AUTOMATION,
-    ])
-    builder.setType('autonomous')
-    builder.setModel('claude-sonnet-4-5-20250929')
-    builder.addProperty('platform', 'AgentVault')
-    builder.addProperty('version', '0.1.0')
+  // TODO: Complete dynamic HCS-10 registration flow against the registry.
+  // For now we only confirm the client can be initialized and record
+  // the unresolved registration state for operators.
+  console.warn('[HCS-10] Client initialized but dynamic agent registration is not yet implemented', {
+    name: params?.name || 'AgentVault MCP Server',
+    hasDescription: Boolean(params?.description),
+    hasEndpoint: Boolean(params?.mcpEndpoint),
+  })
 
-    if (params?.mcpEndpoint) {
-      builder.addProperty('mcpEndpoint', params.mcpEndpoint)
-    }
-
-    console.log('[HCS-10] Registering agent on Hashgraph Online...')
-
-    const result = await client.createAgent(builder)
-
-    agentInfo = {
-      accountId: process.env.HCS_OPERATOR_ID || '',
-      inboundTopicId: result.inboundTopicId,
-      outboundTopicId: result.outboundTopicId,
-      profileTopicId: result.profileTopicId,
-    }
-
-    console.log('[HCS-10] Agent registered successfully:')
-    console.log(`  Inbound Topic:  ${result.inboundTopicId}`)
-    console.log(`  Outbound Topic: ${result.outboundTopicId}`)
-    console.log(`  Profile Topic:  ${result.profileTopicId}`)
-    console.log('')
-    console.log('[HCS-10] Add these to your .env to skip re-registration:')
-    console.log(`  HCS10_INBOUND_TOPIC_ID=${result.inboundTopicId}`)
-    console.log(`  HCS10_OUTBOUND_TOPIC_ID=${result.outboundTopicId}`)
-    console.log(`  HCS10_PROFILE_TOPIC_ID=${result.profileTopicId}`)
-
-    return agentInfo
-  } catch (error) {
-    console.error('[HCS-10] Agent registration failed:', error)
-    return null
-  }
+  return null
 }
 
-/**
- * Get current agent identity info (if registered)
- */
-export function getAgentIdentity(): AgentIdentityInfo | null {
+export function getRegisteredAgentInfo(): AgentIdentityInfo | null {
   return agentInfo
-}
-
-/**
- * Get the Hashgraph Online registry URL for this agent
- */
-export function getRegistryUrl(): string | null {
-  if (!agentInfo) return null
-  const config = getConfig()
-  const network = config?.network === 'mainnet' ? 'mainnet' : 'testnet'
-  return `https://hashgraphonline.com/agents?network=${network}&accountId=${agentInfo.accountId}`
 }

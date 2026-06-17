@@ -22,7 +22,16 @@ dotenv.config({ path: resolve(appRoot, '.env') })
 const NEXT_APP_URL = process.env.NEXT_APP_URL ?? 'http://localhost:3000'
 const MCP_SLUG = process.argv[2] ?? 'my-agent'
 
+function isDemoModeAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production' || process.env.MCP_DEV_MODE === 'true'
+}
+
 async function main() {
+  if (!isDemoModeAllowed()) {
+    console.error('[stdio-bridge] Demo stdio bridge is disabled in production')
+    process.exit(1)
+  }
+
   const { toolRegistry } = await import('./tools/registry.js')
 
   // Load tools for the slug

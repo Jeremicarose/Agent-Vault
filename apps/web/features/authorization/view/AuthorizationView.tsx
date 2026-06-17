@@ -31,7 +31,6 @@ export function AuthorizationView() {
   const {
     clientInfo,
     enableSmartAccount,
-    smartAccountStatus,
     selectedScopeIds,
     hasNonEnforceableScope,
     toggleScope,
@@ -67,13 +66,13 @@ export function AuthorizationView() {
 
   // Smart account not enabled
   if (step === 'smartAccountRequired') {
-    return (
-      <SmartAccountRequired
-        onEnable={enableSmartAccount}
-        isEnabling={smartAccountStatus === 'enabling'}
-      />
-    )
-  }
+        return (
+          <SmartAccountRequired
+            onEnable={enableSmartAccount}
+            isEnabling={false}
+          />
+        )
+      }
 
   // No client info (shouldn't happen if step is 'ready', but guard anyway)
   if (!clientInfo) {

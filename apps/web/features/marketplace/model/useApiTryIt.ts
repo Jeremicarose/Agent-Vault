@@ -32,6 +32,10 @@ interface UseApiTryItReturn {
   executeRequest: () => Promise<void>
 }
 
+function isDemoModeAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production'
+}
+
 function convertToType(value: string, type: VariableType): unknown {
   if (value === '') return undefined
   switch (type) {
@@ -121,14 +125,19 @@ export function useApiTryIt({
       const typedVariables = convertVariables(variables, variablesSchema)
       const shouldSendBody = ['POST', 'PUT', 'PATCH'].includes(httpMethod.toUpperCase())
 
-      // Make request — demo mode bypasses payment for testing
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-Variables': JSON.stringify(typedVariables),
+      }
+
+      if (isDemoModeAllowed()) {
+        headers['X-DEMO'] = 'true'
+      }
+
+      // Make request. In non-production contexts this can use demo mode for testing.
       const fetchResponse = await fetch(proxyUrl, {
         method: httpMethod,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Variables': JSON.stringify(typedVariables),
-          'X-DEMO': 'true',
-        },
+        headers,
         ...(shouldSendBody && requestBody ? { body: requestBody } : {}),
       })
 

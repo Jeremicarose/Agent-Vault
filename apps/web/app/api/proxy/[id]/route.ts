@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db, apiProxies, requestLogs } from '@/lib/db'
+import { db, apiProxies, paymentIntents, paymentSettlements, requestLogs } from '@/lib/db'
 import { eq } from 'drizzle-orm'
 import { decryptHybrid, type HybridEncryptedData } from '@/lib/crypto/encryption'
 import {
@@ -8,8 +8,15 @@ import {
   extractVariables,
   type VariableDefinition,
 } from '@/features/proxy/model/variables'
+import { decodeProxyPaymentHeader } from '@x402/contracts'
+import { evaluateProxyAccess } from './access'
+import { verifyPaymentSettlement } from '@/app/api/pay/settlement'
 
 type RouteParams = { params: Promise<{ id: string }> }
+
+function isDemoModeAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production'
+}
 
 function isUUID(str: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -74,7 +81,45 @@ async function handleProxyRequest(
     }
 
     const paymentHeaderValue = request.headers.get('X-PAYMENT')
-    const isDemoMode = request.headers.get('X-DEMO') === 'true'
+    const requestedDemoMode = request.headers.get('X-DEMO') === 'true'
+    const accessDecision = evaluateProxyAccess({
+      requestedDemoMode,
+      demoModeAllowed: isDemoModeAllowed(),
+      paymentHeaderValue,
+    })
+
+    if (!accessDecision.ok) {
+      status = accessDecision.status === 402 ? 'payment_required' : 'payment_failed'
+      await logRequest(proxyId, requesterWallet, status)
+
+      if (accessDecision.status === 402) {
+        return NextResponse.json(
+          {
+            error: accessDecision.error,
+            amount: proxy.pricePerRequest,
+            description: proxy.description ?? 'API access payment',
+            paymentAddress: proxy.paymentAddress,
+          },
+          { status: 402 }
+        )
+      }
+
+      return NextResponse.json(
+        { error: accessDecision.error },
+        { status: accessDecision.status }
+      )
+    }
+
+    const { isDemoMode } = accessDecision
+    const decodedPaymentHeader = paymentHeaderValue
+      ? decodeProxyPaymentHeader(paymentHeaderValue)
+      : null
+
+    if (decodedPaymentHeader && !decodedPaymentHeader.success) {
+        status = 'payment_failed'
+        await logRequest(proxyId, requesterWallet, status)
+        return NextResponse.json({ error: 'Invalid payment header format' }, { status: 400 })
+    }
 
     if (!paymentHeaderValue && !isDemoMode) {
       // Return payment info so the client can initiate payment
@@ -97,6 +142,111 @@ async function handleProxyRequest(
       console.log('[Proxy] Demo mode — payment skipped')
     }
 
+    if (paymentHeaderValue && !isDemoMode) {
+      try {
+        if (!decodedPaymentHeader || !decodedPaymentHeader.success) {
+          status = 'payment_failed'
+          await logRequest(proxyId, requesterWallet, status)
+          return NextResponse.json({ error: 'Invalid payment header format' }, { status: 400 })
+        }
+
+        const intent = await db.query.paymentIntents.findFirst({
+          where: eq(paymentIntents.id, decodedPaymentHeader.data.intentId),
+        })
+
+        if (!intent) {
+          status = 'payment_failed'
+          await logRequest(proxyId, requesterWallet, status)
+          return NextResponse.json(
+            { error: 'Payment intent not found' },
+            { status: 404 }
+          )
+        }
+
+        if (intent.status !== 'pending') {
+          status = 'payment_failed'
+          await logRequest(proxyId, requesterWallet, status)
+          return NextResponse.json(
+            { error: 'Payment intent has already been consumed' },
+            { status: 409 }
+          )
+        }
+
+        if (
+          intent.proxyId !== proxy.id ||
+          intent.chainId !== decodedPaymentHeader.data.chainId ||
+          intent.tokenAddress.toLowerCase() !== decodedPaymentHeader.data.token.toLowerCase() ||
+          intent.recipientAddress.toLowerCase() !== decodedPaymentHeader.data.recipient.toLowerCase() ||
+          intent.amount.toString() !== decodedPaymentHeader.data.amount
+        ) {
+          status = 'payment_failed'
+          await logRequest(proxyId, requesterWallet, status)
+          return NextResponse.json(
+            { error: 'Payment header does not match stored intent' },
+            { status: 409 }
+          )
+        }
+
+        const existingSettlement = await db.query.paymentSettlements.findFirst({
+          where: eq(paymentSettlements.txHash, decodedPaymentHeader.data.txHash),
+        })
+
+        if (existingSettlement) {
+          status = 'payment_failed'
+          await logRequest(proxyId, requesterWallet, status)
+          return NextResponse.json(
+            { error: 'Payment transaction hash has already been used' },
+            { status: 409 }
+          )
+        }
+
+        const settlement = await verifyPaymentSettlement({
+          txHash: decodedPaymentHeader.data.txHash,
+          chainId: decodedPaymentHeader.data.chainId,
+          token: decodedPaymentHeader.data.token,
+          to: decodedPaymentHeader.data.recipient,
+          amount: decodedPaymentHeader.data.amount,
+        })
+
+        if (!settlement.settled) {
+          status = 'payment_failed'
+          await logRequest(proxyId, requesterWallet, status)
+          return NextResponse.json(
+            { error: settlement.error },
+            { status: 402 }
+          )
+        }
+
+        requesterWallet = settlement.from.toLowerCase()
+
+        await db.insert(paymentSettlements).values({
+          txHash: settlement.txHash,
+          proxyId: proxy.id,
+          tokenAddress: decodedPaymentHeader.data.token.toLowerCase(),
+          recipientAddress: settlement.to.toLowerCase(),
+          payerAddress: settlement.from.toLowerCase(),
+          amount: Number(decodedPaymentHeader.data.amount),
+          chainId: decodedPaymentHeader.data.chainId,
+        })
+
+        await db.update(paymentIntents)
+          .set({
+            status: 'settled',
+            paymentTxHash: settlement.txHash,
+            updatedAt: new Date(),
+          })
+          .where(eq(paymentIntents.id, intent.id))
+      } catch (error) {
+        console.error('[Proxy] Settlement verification failed:', error)
+        status = 'payment_failed'
+        await logRequest(proxyId, requesterWallet, status)
+        return NextResponse.json(
+          { error: 'Payment settlement verification failed' },
+          { status: 502 }
+        )
+      }
+    }
+
     let targetResponse: { status: number; statusText: string; body: ArrayBuffer; headers: Headers }
 
     try {
@@ -115,8 +265,6 @@ async function handleProxyRequest(
     const isSuccess = targetResponse.status >= 200 && targetResponse.status < 300
 
     if (isSuccess) {
-      // TODO: Implement Hedera payment settlement (HTS token transfer)
-      console.warn('[Proxy] Payment settlement skipped — Hedera integration pending')
       status = 'success'
     } else {
       status = 'target_error'

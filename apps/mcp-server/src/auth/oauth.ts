@@ -56,6 +56,7 @@ export async function validateBearerToken(authHeader: string | null | undefined)
   const session = await db.query.sessionKeys.findFirst({
     where: and(
       eq(sessionKeys.id, accessToken.sessionKeyId),
+      eq(sessionKeys.userId, accessToken.userId),
       eq(sessionKeys.isActive, true)
     ),
   })

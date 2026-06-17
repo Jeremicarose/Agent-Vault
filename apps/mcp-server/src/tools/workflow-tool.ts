@@ -8,7 +8,11 @@ import {
 } from 'crypto'
 import { type Hex, type Address } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
+import {
+  type ExecuteSessionRequest,
+} from '@x402/contracts'
 import type { ToolContext, ToolResult, McpToolDefinition } from './proxy-tool.js'
+import { submitRelayExecution } from './relay-execution.js'
 import { executeWorkflow, type WorkflowExecutionDeps } from '../workflows/engine.js'
 import type { WorkflowDefinition, VariableDefinition } from '../workflows/types.js'
 import { db, apiProxies, workflowTemplates, type SessionKey } from '../db/client.js'
@@ -253,17 +257,7 @@ export function createWorkflowTool(
 
     async handler(args: Record<string, unknown>): Promise<ToolResult> {
       try {
-        // Get the user's wallet address
-        const { db: dbClient, users } = await import('../db/client.js')
-        const user = await dbClient.query.users.findFirst({
-          where: eq(users.id, context.auth.session.userId),
-        })
-
-        if (!user) {
-          throw new Error('User not found for session')
-        }
-
-        const ownerAddress = user.walletAddress as Address
+        const ownerAddress = context.auth.user.walletAddress as Address
 
         // Build workflow execution dependencies
         const deps: WorkflowExecutionDeps = {
@@ -314,33 +308,17 @@ export function createWorkflowTool(
             console.log('[Workflow] Signed execution, submitting to relayer...')
 
             // Build request body
-            const requestBody = JSON.stringify({
+            const requestPayload: ExecuteSessionRequest = {
               ownerAddress,
               sessionId: params.sessionId,
               mode: params.mode,
               executionData: params.executionData,
-              signature,
+              sessionKeySignature: signature,
               chainId: context.chainId,
-            })
-
-            console.log('[Workflow] Request body length:', requestBody.length)
-
-            // Submit to the relayer endpoint
-            const response = await fetch(`${context.nextAppUrl}/api/execute`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: requestBody,
-            })
-
-            if (!response.ok) {
-              const error = await response.text()
-              throw new Error(`Transaction failed: ${error}`)
             }
 
-            const result = await response.json() as { txHash: Hex }
-            return { txHash: result.txHash }
+            console.log('[Workflow] Request payload prepared')
+            return submitRelayExecution(context.nextAppUrl, requestPayload)
           },
         }
 

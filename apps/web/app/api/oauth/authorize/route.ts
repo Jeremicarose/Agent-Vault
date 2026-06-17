@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
   })
 
   // If mcp_slug is available, fetch workflows and their scope requirements
-  let workflowTargets: { address: string; name?: string; description?: string; workflowName: string }[] = []
+  const workflowTargets: { address: string; name?: string; description?: string; workflowName: string }[] = []
 
   if (effectiveSlug) {
     // Get MCP server by slug

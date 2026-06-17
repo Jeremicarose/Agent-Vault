@@ -42,7 +42,6 @@ export function PaymentForm({
     setUseSession,
     canUseSession,
     isSmartAccountEnabled,
-    smartAccountStatus,
     activeSession,
     isLoadingSessions,
     explorerUrl,
@@ -63,15 +62,6 @@ export function PaymentForm({
   }
 
   const getButtonContent = () => {
-    if (smartAccountStatus === 'enabling') {
-      return (
-        <>
-          <Loader2 className="size-4 animate-spin" />
-          {buttonText}
-        </>
-      )
-    }
-
     if (isProcessing) {
       return (
         <>

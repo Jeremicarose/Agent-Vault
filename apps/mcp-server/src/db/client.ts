@@ -35,6 +35,24 @@ export const apiProxies = pgTable('api_proxies', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export const paymentIntents = pgTable('payment_intents', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  proxyId: uuid('proxy_id').references(() => apiProxies.id, { onDelete: 'cascade' }).notNull(),
+  sessionId: varchar('session_id', { length: 66 }).notNull(),
+  ownerAddress: varchar('owner_address', { length: 42 }).notNull(),
+  tokenAddress: varchar('token_address', { length: 42 }).notNull(),
+  recipientAddress: varchar('recipient_address', { length: 42 }).notNull(),
+  amount: bigint('amount', { mode: 'number' }).notNull(),
+  chainId: integer('chain_id').notNull(),
+  status: varchar('status', { length: 20 }).default('pending').notNull(),
+  paymentTxHash: varchar('payment_tx_hash', { length: 66 }).unique(),
+  createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_payment_intents_proxy').on(table.proxyId),
+  index('idx_payment_intents_session').on(table.sessionId),
+])
+
 export const sessionKeys = pgTable('session_keys', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
@@ -158,6 +176,7 @@ export const mcpServerWorkflows = pgTable('mcp_server_workflows', {
 // Type exports
 export type User = typeof users.$inferSelect
 export type ApiProxy = typeof apiProxies.$inferSelect
+export type PaymentIntent = typeof paymentIntents.$inferSelect
 export type SessionKey = typeof sessionKeys.$inferSelect
 export type OAuthAccessToken = typeof oauthAccessTokens.$inferSelect
 export type McpServer = typeof mcpServers.$inferSelect
@@ -169,6 +188,7 @@ export type McpServerWorkflow = typeof mcpServerWorkflows.$inferSelect
 const schema = {
   users,
   apiProxies,
+  paymentIntents,
   sessionKeys,
   oauthClients,
   oauthAccessTokens,

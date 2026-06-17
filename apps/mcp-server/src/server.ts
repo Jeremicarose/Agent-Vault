@@ -15,6 +15,15 @@ import { validateBearerToken, type AuthContext } from './auth/oauth.js'
 import { toolRegistry, type McpServerConfig } from './tools/registry.js'
 import { createToolsForServer, type ToolContext } from './tools/proxy-tool.js'
 import { createWorkflowToolsForServer } from './tools/workflow-tool.js'
+import {
+  type PersistedMcpSession,
+  savePersistedSession,
+  getPersistedSession,
+  hasPersistedSession,
+  deletePersistedSession,
+  touchPersistedSession,
+  closeSessionStore,
+} from './session-store.js'
 
 /**
  * MCP Session information
@@ -29,6 +38,16 @@ interface McpSession {
 
 // Session storage
 const sessions = new Map<string, McpSession>()
+
+function toPersistedSession(sessionId: string, session: McpSession): PersistedMcpSession {
+  return {
+    sessionId,
+    slug: session.slug,
+    auth: session.auth,
+    config: session.config,
+    createdAt: new Date().toISOString(),
+  }
+}
 
 /**
  * Create the Express app for the MCP server
@@ -58,6 +77,81 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' })
   })
+
+  const rehydrateSession = async (persisted: PersistedMcpSession): Promise<McpSession | null> => {
+    const currentConfig = await toolRegistry.loadToolsForSlug(persisted.slug)
+    const effectiveConfig = currentConfig ?? persisted.config
+    const mcpServer = createMcpServer(effectiveConfig, persisted.auth)
+
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => persisted.sessionId,
+      onsessioninitialized: (newSessionId) => {
+        if (newSessionId !== persisted.sessionId) {
+          console.warn('[MCP] Rehydrated session generated unexpected session ID:', {
+            expected: persisted.sessionId,
+            actual: newSessionId,
+          })
+        }
+      },
+    })
+
+    await mcpServer.connect(transport)
+
+    const internalTransport = transport as StreamableHTTPServerTransport & {
+      _webStandardTransport?: {
+        sessionId?: string
+        _initialized?: boolean
+      }
+    }
+
+    if (!internalTransport._webStandardTransport) {
+      console.error('[MCP] Could not access underlying transport for session rehydration')
+      return null
+    }
+
+    internalTransport._webStandardTransport.sessionId = persisted.sessionId
+    internalTransport._webStandardTransport._initialized = true
+
+    const session: McpSession = {
+      transport,
+      server: mcpServer,
+      auth: persisted.auth,
+      slug: persisted.slug,
+      config: effectiveConfig,
+    }
+
+    transport.onclose = () => {
+      sessions.delete(persisted.sessionId)
+      void deletePersistedSession(persisted.sessionId)
+    }
+
+    sessions.set(persisted.sessionId, session)
+    await touchPersistedSession(persisted.sessionId).catch(() => {})
+    return session
+  }
+
+  const getSession = async (sessionId: string): Promise<McpSession | null> => {
+    const inMemory = sessions.get(sessionId)
+    if (inMemory) {
+      await touchPersistedSession(sessionId).catch(() => {})
+      return inMemory
+    }
+
+    const persisted = await getPersistedSession(sessionId)
+    if (!persisted) {
+      return null
+    }
+
+    return rehydrateSession(persisted)
+  }
+
+  const isStalePersistedSession = async (sessionId: string): Promise<boolean> => {
+    if (sessions.has(sessionId)) {
+      return false
+    }
+
+    return hasPersistedSession(sessionId)
+  }
 
   /**
    * OAuth 2.0 Authorization Server Metadata (RFC 8414)
@@ -229,7 +323,7 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
     const sessionId = req.headers['mcp-session-id'] as string | undefined
 
     if (sessionId) {
-      const session = sessions.get(sessionId)
+      const session = await getSession(sessionId)
       if (session) {
         // Verify the session is for the correct slug
         if (session.slug !== slug) {
@@ -370,14 +464,17 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
 
     try {
       // Check for existing session
-      if (sessionId && sessions.has(sessionId)) {
-        const session = sessions.get(sessionId)!
-        await session.transport.handleRequest(
-          req as unknown as IncomingMessage,
-          res as unknown as ServerResponse,
-          req.body
-        )
-        return
+      if (sessionId) {
+        const session = await getSession(sessionId)
+        if (session) {
+          await touchPersistedSession(sessionId).catch(() => {})
+          await session.transport.handleRequest(
+            req as unknown as IncomingMessage,
+            res as unknown as ServerResponse,
+            req.body
+          )
+          return
+        }
       }
 
       // Load server configuration
@@ -395,13 +492,16 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (newSessionId) => {
-          sessions.set(newSessionId, {
+          const session = {
             transport,
             server: mcpServer,
             auth,
             slug,
             config: serverConfig,
-          })
+          }
+
+          sessions.set(newSessionId, session)
+          void savePersistedSession(toPersistedSession(newSessionId, session))
         },
       })
 
@@ -413,6 +513,7 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
         const sid = transport.sessionId
         if (sid) {
           sessions.delete(sid)
+          void deletePersistedSession(sid)
         }
       }
 
@@ -435,12 +536,23 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
   app.get('/mcp/:slug', mcpMiddleware, async (req: Request & { mcpSlug?: string; mcpAuth?: AuthContext }, res: Response) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
 
-    if (!sessionId || !sessions.has(sessionId)) {
+    if (!sessionId) {
       res.status(400).json({ error: 'Invalid or missing session ID' })
       return
     }
 
-    const session = sessions.get(sessionId)!
+    const session = await getSession(sessionId)
+    if (!session) {
+      if (await isStalePersistedSession(sessionId)) {
+        res.status(409).json({
+          error: 'Session metadata exists but active transport state was lost; reinitialize the MCP session',
+        })
+        return
+      }
+
+      res.status(400).json({ error: 'Invalid or expired session ID' })
+      return
+    }
 
     try {
       await session.transport.handleRequest(
@@ -460,12 +572,24 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
   app.delete('/mcp/:slug', mcpMiddleware, async (req: Request & { mcpSlug?: string; mcpAuth?: AuthContext }, res: Response) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
 
-    if (!sessionId || !sessions.has(sessionId)) {
+    if (!sessionId) {
       res.status(400).json({ error: 'Invalid or missing session ID' })
       return
     }
 
-    const session = sessions.get(sessionId)!
+    const session = await getSession(sessionId)
+    if (!session) {
+      if (await isStalePersistedSession(sessionId)) {
+        await deletePersistedSession(sessionId)
+        res.status(409).json({
+          error: 'Session metadata exists but active transport state was lost; reinitialize the MCP session',
+        })
+        return
+      }
+
+      res.status(400).json({ error: 'Invalid or expired session ID' })
+      return
+    }
 
     try {
       await session.transport.handleRequest(
@@ -473,6 +597,7 @@ export function createApp(config: { nextAppUrl: string; chainId: number; mcpPubl
         res as unknown as ServerResponse
       )
       sessions.delete(sessionId)
+      await deletePersistedSession(sessionId)
     } catch {
       if (!res.headersSent) {
         res.status(500).json({ error: 'Internal server error' })
@@ -503,4 +628,5 @@ export async function shutdown(): Promise<void> {
   }
 
   sessions.clear()
+  await closeSessionStore()
 }

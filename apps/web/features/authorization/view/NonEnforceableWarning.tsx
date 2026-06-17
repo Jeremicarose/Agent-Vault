@@ -14,7 +14,7 @@ export function NonEnforceableWarning() {
         <div>
           <p className="font-medium text-amber-800">No Spending Limits</p>
           <p className="text-sm text-amber-700 mt-1">
-            Some permissions you're approving cannot enforce spending limits.
+            Some permissions you&apos;re approving cannot enforce spending limits.
             This application will be able to request signatures without budget restrictions.
           </p>
         </div>

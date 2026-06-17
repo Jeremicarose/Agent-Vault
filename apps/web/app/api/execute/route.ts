@@ -9,11 +9,32 @@ import {
 import { privateKeyToAccount } from 'viem/accounts'
 import { hederaTestnet, hedera } from 'viem/chains'
 import { withAuth } from '@/lib/auth'
-import { agentDelegatorAbi, AGENT_DELEGATOR_ADDRESS } from '@x402/contracts'
+import { db, sessionKeys } from '@/lib/db'
+import { and, eq } from 'drizzle-orm'
+import {
+  agentDelegatorAbi,
+  AGENT_DELEGATOR_ADDRESS,
+  EXECUTE_ERROR_CODES,
+  validateExecuteSessionRequest,
+  type ExecuteErrorResponse,
+} from '@x402/contracts'
+import {
+  validateExecuteChainPreflight,
+  validateExecuteOwnershipAndSession,
+} from './ownership'
 
 const SUPPORTED_CHAINS: Record<number, Chain> = {
   296: hederaTestnet,
   295: hedera,
+}
+
+function errorResponse(
+  status: number,
+  code: ExecuteErrorResponse['code'],
+  error: string,
+  details?: unknown
+) {
+  return NextResponse.json({ error, code, details }, { status })
 }
 
 /**
@@ -33,8 +54,19 @@ const SUPPORTED_CHAINS: Record<number, Chain> = {
  *
  * Returns: { txHash }
  */
-export const POST = withAuth(async (_user, request) => {
+export const POST = withAuth(async (user, request) => {
   const body = await request.json()
+  const parsed = validateExecuteSessionRequest(body)
+
+  if (!parsed.success) {
+    return errorResponse(
+      400,
+      EXECUTE_ERROR_CODES.INVALID_REQUEST,
+      'Invalid execute request payload',
+      parsed.issues
+    )
+  }
+
   const {
     sessionId,
     mode,
@@ -42,71 +74,72 @@ export const POST = withAuth(async (_user, request) => {
     sessionKeySignature,
     chainId,
     ownerAddress,
-  } = body
+  } = parsed.data
 
   // --- Validate inputs ---
 
-  if (!sessionId || !/^0x[0-9a-f]{64}$/i.test(sessionId)) {
-    return NextResponse.json(
-      { error: 'Invalid sessionId — must be bytes32 hex' },
-      { status: 400 }
-    )
-  }
+  const session = await db.query.sessionKeys.findFirst({
+    where: and(
+      eq(sessionKeys.sessionId, sessionId.toLowerCase()),
+      eq(sessionKeys.userId, user.id),
+      eq(sessionKeys.isActive, true)
+    ),
+  })
 
-  if (!mode || !/^0x[0-9a-f]{64}$/i.test(mode)) {
-    return NextResponse.json(
-      { error: 'Invalid mode — must be bytes32 hex' },
-      { status: 400 }
-    )
-  }
+  const ownershipValidation = validateExecuteOwnershipAndSession({
+    authenticatedWalletAddress: user.walletAddress,
+    ownerAddress,
+    session: session ?? null,
+  })
 
-  if (!executionData || !/^0x[0-9a-f]*$/i.test(executionData)) {
-    return NextResponse.json(
-      { error: 'Invalid executionData — must be hex' },
-      { status: 400 }
-    )
-  }
+  if (!ownershipValidation.ok) {
+    const code =
+      ownershipValidation.status === 404
+        ? EXECUTE_ERROR_CODES.SESSION_NOT_FOUND
+        : ownershipValidation.error === 'ownerAddress must not be the session key address'
+          ? EXECUTE_ERROR_CODES.OWNER_IS_SESSION_KEY
+          : ownershipValidation.error === 'Session is outside its validity window'
+            ? EXECUTE_ERROR_CODES.SESSION_INVALID_WINDOW
+            : EXECUTE_ERROR_CODES.OWNER_MISMATCH
 
-  if (!sessionKeySignature || !/^0x[0-9a-f]*$/i.test(sessionKeySignature)) {
-    return NextResponse.json(
-      { error: 'Invalid sessionKeySignature — must be hex' },
-      { status: 400 }
-    )
-  }
-
-  if (!ownerAddress || !/^0x[0-9a-f]{40}$/i.test(ownerAddress)) {
-    return NextResponse.json(
-      { error: 'Invalid ownerAddress' },
-      { status: 400 }
+    return errorResponse(
+      ownershipValidation.status,
+      code,
+      ownershipValidation.error
     )
   }
 
   // --- Resolve chain ---
 
-  const chain = SUPPORTED_CHAINS[chainId]
-  if (!chain) {
-    return NextResponse.json(
-      { error: `Unsupported chain: ${chainId}` },
-      { status: 400 }
+  const delegatorAddress = AGENT_DELEGATOR_ADDRESS[chainId]
+
+  const chainPreflight = validateExecuteChainPreflight({
+    chainId,
+    supportedChains: SUPPORTED_CHAINS,
+    delegatorAddress,
+  })
+
+  if (!chainPreflight.ok) {
+    return errorResponse(
+      chainPreflight.status,
+      chainPreflight.error.startsWith('Unsupported chain')
+        ? EXECUTE_ERROR_CODES.UNSUPPORTED_CHAIN
+        : EXECUTE_ERROR_CODES.DELEGATOR_NOT_DEPLOYED,
+      chainPreflight.error
     )
   }
 
-  const delegatorAddress = AGENT_DELEGATOR_ADDRESS[chainId]
-  if (!delegatorAddress || delegatorAddress === '0x0000000000000000000000000000000000000000') {
-    return NextResponse.json(
-      { error: `AgentDelegator not deployed on chain ${chainId}` },
-      { status: 400 }
-    )
-  }
+  const chain = SUPPORTED_CHAINS[chainId]
 
   // --- Load relayer key ---
 
   const relayerKey = process.env.FACILITATOR_RELAYER_KEY as Hex | undefined
   if (!relayerKey) {
     console.error('[execute] FACILITATOR_RELAYER_KEY not configured')
-    return NextResponse.json(
-      { error: 'Relayer not configured' },
-      { status: 503 }
+    return errorResponse(
+      503,
+      EXECUTE_ERROR_CODES.RELAYER_NOT_CONFIGURED,
+      'Relayer not configured'
     )
   }
 
@@ -173,24 +206,24 @@ export const POST = withAuth(async (_user, request) => {
 
     // Check for known contract errors
     if (message.includes('SessionNotFound')) {
-      return NextResponse.json({ error: 'Session not found on-chain' }, { status: 404 })
+      return errorResponse(404, EXECUTE_ERROR_CODES.SESSION_NOT_FOUND_ONCHAIN, 'Session not found on-chain')
     }
     if (message.includes('SessionInactive')) {
-      return NextResponse.json({ error: 'Session has been revoked' }, { status: 403 })
+      return errorResponse(403, EXECUTE_ERROR_CODES.SESSION_REVOKED, 'Session has been revoked')
     }
     if (message.includes('SessionExpired')) {
-      return NextResponse.json({ error: 'Session has expired' }, { status: 403 })
+      return errorResponse(403, EXECUTE_ERROR_CODES.SESSION_EXPIRED, 'Session has expired')
     }
     if (message.includes('InvalidSessionKey')) {
-      return NextResponse.json({ error: 'Invalid session key signature' }, { status: 403 })
+      return errorResponse(403, EXECUTE_ERROR_CODES.INVALID_SESSION_SIGNATURE, 'Invalid session key signature')
     }
     if (message.includes('TargetNotAllowed')) {
-      return NextResponse.json({ error: 'Target contract not allowed by session' }, { status: 403 })
+      return errorResponse(403, EXECUTE_ERROR_CODES.TARGET_NOT_ALLOWED, 'Target contract not allowed by session')
     }
     if (message.includes('SelectorNotAllowed')) {
-      return NextResponse.json({ error: 'Function selector not allowed by session' }, { status: 403 })
+      return errorResponse(403, EXECUTE_ERROR_CODES.SELECTOR_NOT_ALLOWED, 'Function selector not allowed by session')
     }
 
-    return NextResponse.json({ error: message }, { status: 500 })
+    return errorResponse(500, EXECUTE_ERROR_CODES.EXECUTION_FAILED, message)
   }
 })

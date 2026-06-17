@@ -15,7 +15,12 @@ import {
   keccak256,
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import type { SessionKey, ApiProxy } from '../db/client.js'
+import {
+  encodeProxyPaymentHeader,
+  parseExecuteErrorResponse,
+  type ProxyPaymentHeader,
+} from '@x402/contracts'
+import { db, paymentIntents, type SessionKey, type ApiProxy } from '../db/client.js'
 
 const AES_ALGORITHM = 'aes-256-gcm'
 
@@ -188,7 +193,8 @@ export async function signPayment(params: {
 export async function buildPaymentForProxy(
   session: SessionKey,
   proxy: ApiProxy,
-  chainId: number
+  chainId: number,
+  ownerAddress: string
 ): Promise<string> {
   const nextAppUrl =
     process.env.NEXT_APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -204,13 +210,24 @@ export async function buildPaymentForProxy(
 
   const paymentPayload = await signPayment({
     session,
-    ownerAddress: session.userId,
+    ownerAddress,
     recipientAddress: proxy.paymentAddress,
     amount: BigInt(proxy.pricePerRequest),
     tokenAddress,
     chainId,
     delegatorAddress,
   })
+
+  const [intent] = await db.insert(paymentIntents).values({
+    proxyId: proxy.id,
+    sessionId: session.sessionId,
+    ownerAddress: ownerAddress.toLowerCase(),
+    tokenAddress: tokenAddress.toLowerCase(),
+    recipientAddress: proxy.paymentAddress.toLowerCase(),
+    amount: proxy.pricePerRequest,
+    chainId,
+    status: 'pending',
+  }).returning()
 
   const response = await fetch(`${nextAppUrl}/api/execute`, {
     method: 'POST',
@@ -219,12 +236,27 @@ export async function buildPaymentForProxy(
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+    const error = await response.json().catch(() => null)
+    const executeError = parseExecuteErrorResponse(error)
+
+    if (executeError) {
+      throw new Error(`Payment execution failed [${executeError.code}]: ${executeError.error}`)
+    }
+
     throw new Error(
-      `Payment execution failed: ${(error as { error?: string }).error || response.statusText}`
+      `Payment execution failed: ${response.statusText}`
     )
   }
 
   const result = (await response.json()) as { txHash: string }
-  return result.txHash
+  const paymentHeader: ProxyPaymentHeader = {
+    intentId: intent.id,
+    txHash: result.txHash,
+    chainId,
+    token: tokenAddress,
+    recipient: proxy.paymentAddress,
+    amount: proxy.pricePerRequest.toString(),
+  }
+
+  return encodeProxyPaymentHeader(paymentHeader)
 }

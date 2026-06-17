@@ -19,15 +19,17 @@ export function useUserSession() {
 export function useUserBalance() {
   const { session, balance, isBalanceLoading, refreshBalance } = useUserContext()
 
+  const currentChainId = session?.chainId
+
   const formattedBalance = useMemo(() => {
-    if (!balance || !session?.chainId) return null
-    const nativeConfig = getNativeConfig(session.chainId)
-    const usdceConfig = getUsdceConfig(session.chainId)
+    if (!balance || !currentChainId) return null
+    const nativeConfig = getNativeConfig(currentChainId)
+    const usdceConfig = getUsdceConfig(currentChainId)
     return {
       native: formatUnits(balance.native, nativeConfig.decimals),
       usdce: formatUnits(balance.usdce, usdceConfig.decimals),
     }
-  }, [balance, session?.chainId])
+  }, [balance, currentChainId])
 
   return {
     balance,

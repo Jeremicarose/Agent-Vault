@@ -1,7 +1,6 @@
 'use client'
 
 import { Search, X, SlidersHorizontal } from 'lucide-react'
-import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,28 +39,9 @@ export function MarketplaceFilters({
   onAddTag,
   onRemoveTag,
   onSortChange,
-  onClear,
-  hasFilters,
+	onClear,
+	hasFilters,
 }: MarketplaceFiltersProps) {
-  // Local search state for debouncing
-  const [searchValue, setSearchValue] = useState(filters.search)
-
-  // Sync local state with filters
-  useEffect(() => {
-    setSearchValue(filters.search)
-  }, [filters.search])
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchValue !== filters.search) {
-        onSearchChange(searchValue)
-      }
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchValue, filters.search, onSearchChange])
-
   const suggestedTags = filters.category
     ? getTagsForCategory(filters.category as CategoryId).filter((t) => !filters.tags.includes(t))
     : []
@@ -75,8 +55,8 @@ export function MarketplaceFilters({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Search APIs..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            value={filters.search}
+            onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>

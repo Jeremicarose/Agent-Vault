@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Auto-commit and push script for Agent Vault
 # Generates structured commit messages based on what actually changed.
@@ -18,12 +19,48 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 LOG_FILE="$REPO_ROOT/logs/auto-commit.log"
 INTERVAL=60  # seconds
+LOCK_DIR="$REPO_ROOT/.git/.auto-commit.lock"
+ALLOWED_REMOTE_URL="https://github.com/Jeremicarose/Agent-Vault.git"
 
 
 mkdir -p "$REPO_ROOT/logs"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+cleanup() {
+    rm -rf "$LOCK_DIR"
+}
+
+acquire_lock() {
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+        trap cleanup EXIT INT TERM
+    else
+        log "Another auto-commit instance appears to be running (lock: $LOCK_DIR)"
+        exit 1
+    fi
+}
+
+ensure_allowed_remote() {
+    cd "$REPO_ROOT" || { log "Failed to navigate to repo root"; exit 1; }
+
+    local current_fetch current_push
+    current_fetch="$(git remote get-url origin 2>/dev/null || true)"
+    current_push="$(git remote get-url --push origin 2>/dev/null || true)"
+
+    if [[ -z "$current_fetch" || -z "$current_push" ]]; then
+        log "Missing origin remote. Setting origin to $ALLOWED_REMOTE_URL"
+        git remote remove origin 2>/dev/null || true
+        git remote add origin "$ALLOWED_REMOTE_URL"
+        return
+    fi
+
+    if [[ "$current_fetch" != "$ALLOWED_REMOTE_URL" || "$current_push" != "$ALLOWED_REMOTE_URL" ]]; then
+        log "Origin remote does not match allowed repo. Repointing origin to $ALLOWED_REMOTE_URL"
+        git remote set-url origin "$ALLOWED_REMOTE_URL"
+        git remote set-url --push origin "$ALLOWED_REMOTE_URL"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -303,14 +340,29 @@ do_commit() {
     log "Changes detected:"
     git status -s >> "$LOG_FILE"
 
-    git add .
+    git add --all ':!logs/auto-commit.log'
+
+    if [[ -z $(git diff --cached --name-only) ]]; then
+        log "No commit-worthy changes after exclusions."
+        return 0
+    fi
 
     local commit_msg=$(generate_commit_message)
     log "Commit: $commit_msg"
-    git commit -m "$commit_msg"
+    if ! git commit -m "$commit_msg" >> "$LOG_FILE" 2>&1; then
+        log "Commit failed."
+        return 1
+    fi
 
-    log "Pushing to origin/main..."
-    if git push origin main 2>&1 | tee -a "$LOG_FILE"; then
+    local current_branch
+    current_branch="$(git branch --show-current)"
+    if [[ -z "$current_branch" ]]; then
+        log "Could not determine current branch."
+        return 1
+    fi
+
+    log "Pushing to origin/$current_branch..."
+    if git push origin "$current_branch" 2>&1 | tee -a "$LOG_FILE"; then
         log "Pushed successfully."
     else
         log "Push failed."
@@ -323,10 +375,14 @@ do_commit() {
 # ---------------------------------------------------------------------------
 case "${1:-}" in
     --once)
+        acquire_lock
+        ensure_allowed_remote
         log "Running single commit check..."
         do_commit
         ;;
     --watch|"")
+        acquire_lock
+        ensure_allowed_remote
         log "Auto-commit started (interval: ${INTERVAL}s)"
         while true; do
             do_commit

@@ -14,6 +14,21 @@ export {
   isAgentDelegatorDeployed,
 } from './addresses'
 
+// Shared request validation
+export { validateExecuteSessionRequest } from './execute'
+export { EXECUTE_ERROR_CODES, parseExecuteErrorResponse } from './execute'
+export {
+  validateProxyPaymentHeader,
+  encodeProxyPaymentHeader,
+  decodeProxyPaymentHeader,
+} from './payment'
+export type {
+  ExecuteSessionRequest,
+  ExecuteErrorCode,
+  ExecuteErrorResponse,
+} from './execute'
+export type { ProxyPaymentHeader } from './payment'
+
 // Types
 export type { Address } from 'viem'
 

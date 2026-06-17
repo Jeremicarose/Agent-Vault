@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useConnection } from 'wagmi'
 import type { Address } from 'viem'
 
@@ -39,23 +39,12 @@ export function usePayLinkGenerator(): UsePayLinkGeneratorReturn {
 
   const [state, setState] = useState<GeneratorState>('input')
   const [isTransitioning, setIsTransitioning] = useState(false)
-  const [recipient, setRecipient] = useState('')
+  const [recipientOverride, setRecipientOverride] = useState('')
   const [amount, setAmount] = useState('1.50')
   const [copied, setCopied] = useState(false)
-  const [baseHost, setBaseHost] = useState('')
-  const [baseOrigin, setBaseOrigin] = useState('')
-
-  useEffect(() => {
-    setBaseHost(window.location.host)
-    setBaseOrigin(window.location.origin)
-  }, [])
-
-  // Auto-set recipient to connected address
-  useEffect(() => {
-    if (address && !recipient) {
-      setRecipient(address)
-    }
-  }, [address, recipient])
+  const baseHost = typeof window !== 'undefined' ? window.location.host : ''
+  const baseOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+  const recipient = recipientOverride || address || ''
 
   const paymentUrl = baseOrigin
     ? `${baseOrigin}/pay/${encodeURIComponent(recipient)}/${encodeURIComponent(amount)}`
@@ -115,7 +104,7 @@ export function usePayLinkGenerator(): UsePayLinkGeneratorReturn {
   }, [paymentUrl])
 
   const useAddress = useCallback(() => {
-    if (address) setRecipient(address)
+    if (address) setRecipientOverride(address)
   }, [address])
 
   const truncatedAddress = useMemo(() => {
@@ -128,8 +117,8 @@ export function usePayLinkGenerator(): UsePayLinkGeneratorReturn {
     truncatedAddress,
     state,
     isTransitioning,
-    recipient,
-    amount,
+      recipient,
+      amount,
     copied,
     baseHost,
     paymentUrl,
@@ -137,7 +126,7 @@ export function usePayLinkGenerator(): UsePayLinkGeneratorReturn {
     isValidAmount,
     canGenerate,
     displayRecipient,
-    setRecipient,
+      setRecipient: setRecipientOverride,
     setAmount,
     generate,
     edit,

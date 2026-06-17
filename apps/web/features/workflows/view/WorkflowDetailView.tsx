@@ -142,7 +142,7 @@ function ScopeAnalysisCard({ analysis }: { analysis: WorkflowScopeAnalysis }) {
             <div className="text-sm">
               <p className="font-medium text-amber-800 dark:text-amber-200">Dynamic Targets</p>
               <p className="text-amber-700 dark:text-amber-300">
-                This workflow has targets determined at runtime. You'll need to configure allowed contract addresses.
+                This workflow has targets determined at runtime. You&apos;ll need to configure allowed contract addresses.
               </p>
             </div>
           </div>

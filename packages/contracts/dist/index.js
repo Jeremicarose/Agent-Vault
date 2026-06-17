@@ -293,10 +293,141 @@ function getAgentDelegatorAddress(chainId) {
 function isAgentDelegatorDeployed(chainId) {
   return chainId in AGENT_DELEGATOR_ADDRESS;
 }
+
+// execute.ts
+var EXECUTE_ERROR_CODES = {
+  INVALID_REQUEST: "INVALID_REQUEST",
+  OWNER_MISMATCH: "OWNER_MISMATCH",
+  SESSION_NOT_FOUND: "SESSION_NOT_FOUND",
+  SESSION_INVALID_WINDOW: "SESSION_INVALID_WINDOW",
+  OWNER_IS_SESSION_KEY: "OWNER_IS_SESSION_KEY",
+  UNSUPPORTED_CHAIN: "UNSUPPORTED_CHAIN",
+  DELEGATOR_NOT_DEPLOYED: "DELEGATOR_NOT_DEPLOYED",
+  RELAYER_NOT_CONFIGURED: "RELAYER_NOT_CONFIGURED",
+  SESSION_NOT_FOUND_ONCHAIN: "SESSION_NOT_FOUND_ONCHAIN",
+  SESSION_REVOKED: "SESSION_REVOKED",
+  SESSION_EXPIRED: "SESSION_EXPIRED",
+  INVALID_SESSION_SIGNATURE: "INVALID_SESSION_SIGNATURE",
+  TARGET_NOT_ALLOWED: "TARGET_NOT_ALLOWED",
+  SELECTOR_NOT_ALLOWED: "SELECTOR_NOT_ALLOWED",
+  EXECUTION_FAILED: "EXECUTION_FAILED"
+};
+var BYTES32_HEX = /^0x[0-9a-f]{64}$/i;
+var HEX = /^0x[0-9a-f]*$/i;
+var ADDRESS = /^0x[0-9a-f]{40}$/i;
+function validateExecuteSessionRequest(value) {
+  if (typeof value !== "object" || value === null) {
+    return {
+      success: false,
+      issues: [{ field: "sessionId", message: "Payload must be an object" }]
+    };
+  }
+  const payload = value;
+  const issues = [];
+  if (typeof payload.sessionId !== "string" || !BYTES32_HEX.test(payload.sessionId)) {
+    issues.push({ field: "sessionId", message: "Invalid sessionId" });
+  }
+  if (typeof payload.mode !== "string" || !BYTES32_HEX.test(payload.mode)) {
+    issues.push({ field: "mode", message: "Invalid mode" });
+  }
+  if (typeof payload.executionData !== "string" || !HEX.test(payload.executionData)) {
+    issues.push({ field: "executionData", message: "Invalid executionData" });
+  }
+  if (typeof payload.sessionKeySignature !== "string" || !HEX.test(payload.sessionKeySignature)) {
+    issues.push({ field: "sessionKeySignature", message: "Invalid sessionKeySignature" });
+  }
+  if (typeof payload.chainId !== "number" || !Number.isInteger(payload.chainId) || payload.chainId <= 0) {
+    issues.push({ field: "chainId", message: "Invalid chainId" });
+  }
+  if (typeof payload.ownerAddress !== "string" || !ADDRESS.test(payload.ownerAddress)) {
+    issues.push({ field: "ownerAddress", message: "Invalid ownerAddress" });
+  }
+  if (issues.length > 0) {
+    return { success: false, issues };
+  }
+  return {
+    success: true,
+    data: payload
+  };
+}
+function parseExecuteErrorResponse(value) {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+  const candidate = value;
+  if (typeof candidate.error !== "string" || typeof candidate.code !== "string") {
+    return null;
+  }
+  return {
+    error: candidate.error,
+    code: candidate.code,
+    details: candidate.details
+  };
+}
+
+// payment.ts
+var TX_HASH = /^0x[0-9a-f]{64}$/i;
+var ADDRESS2 = /^0x[0-9a-f]{40}$/i;
+var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function validateProxyPaymentHeader(value) {
+  if (typeof value !== "object" || value === null) {
+    return {
+      success: false,
+      issues: [{ field: "txHash", message: "Payment header must be an object" }]
+    };
+  }
+  const header = value;
+  const issues = [];
+  if (typeof header.intentId !== "string" || !UUID.test(header.intentId)) {
+    issues.push({ field: "intentId", message: "Invalid intentId" });
+  }
+  if (typeof header.txHash !== "string" || !TX_HASH.test(header.txHash)) {
+    issues.push({ field: "txHash", message: "Invalid txHash" });
+  }
+  if (typeof header.chainId !== "number" || !Number.isInteger(header.chainId) || header.chainId <= 0) {
+    issues.push({ field: "chainId", message: "Invalid chainId" });
+  }
+  if (typeof header.token !== "string" || !ADDRESS2.test(header.token)) {
+    issues.push({ field: "token", message: "Invalid token address" });
+  }
+  if (typeof header.recipient !== "string" || !ADDRESS2.test(header.recipient)) {
+    issues.push({ field: "recipient", message: "Invalid recipient address" });
+  }
+  if (typeof header.amount !== "string" || !/^\d+$/.test(header.amount)) {
+    issues.push({ field: "amount", message: "Invalid amount" });
+  }
+  if (issues.length > 0) {
+    return { success: false, issues };
+  }
+  return {
+    success: true,
+    data: header
+  };
+}
+function encodeProxyPaymentHeader(value) {
+  return JSON.stringify(value);
+}
+function decodeProxyPaymentHeader(value) {
+  try {
+    const parsed = JSON.parse(value);
+    return validateProxyPaymentHeader(parsed);
+  } catch {
+    return {
+      success: false,
+      issues: [{ field: "txHash", message: "Payment header must be valid JSON" }]
+    };
+  }
+}
 export {
   AGENT_DELEGATOR_ADDRESS,
+  EXECUTE_ERROR_CODES,
   agentDelegatorAbi,
+  decodeProxyPaymentHeader,
+  encodeProxyPaymentHeader,
   getAgentDelegatorAddress,
-  isAgentDelegatorDeployed
+  isAgentDelegatorDeployed,
+  parseExecuteErrorResponse,
+  validateExecuteSessionRequest,
+  validateProxyPaymentHeader
 };
 //# sourceMappingURL=index.js.map

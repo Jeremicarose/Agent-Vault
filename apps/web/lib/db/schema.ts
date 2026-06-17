@@ -172,6 +172,38 @@ export const requestLogs = pgTable('request_logs', {
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export const paymentSettlements = pgTable('payment_settlements', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  txHash: varchar('tx_hash', { length: 66 }).notNull().unique(),
+  proxyId: uuid('proxy_id').references(() => apiProxies.id, { onDelete: 'cascade' }).notNull(),
+  tokenAddress: varchar('token_address', { length: 42 }).notNull(),
+  recipientAddress: varchar('recipient_address', { length: 42 }).notNull(),
+  payerAddress: varchar('payer_address', { length: 42 }).notNull(),
+  amount: bigint('amount', { mode: 'number' }).notNull(),
+  chainId: integer('chain_id').notNull(),
+  settledAt: timestamp('settled_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_payment_settlements_proxy').on(table.proxyId),
+])
+
+export const paymentIntents = pgTable('payment_intents', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  proxyId: uuid('proxy_id').references(() => apiProxies.id, { onDelete: 'cascade' }).notNull(),
+  sessionId: varchar('session_id', { length: 66 }).notNull(),
+  ownerAddress: varchar('owner_address', { length: 42 }).notNull(),
+  tokenAddress: varchar('token_address', { length: 42 }).notNull(),
+  recipientAddress: varchar('recipient_address', { length: 42 }).notNull(),
+  amount: bigint('amount', { mode: 'number' }).notNull(),
+  chainId: integer('chain_id').notNull(),
+  status: varchar('status', { length: 20 }).default('pending').notNull(),
+  paymentTxHash: varchar('payment_tx_hash', { length: 66 }).unique(),
+  createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_payment_intents_proxy').on(table.proxyId),
+  index('idx_payment_intents_session').on(table.sessionId),
+])
+
 /**
  * Session keys for ERC-7702 smart account delegated signing
  *
@@ -509,6 +541,11 @@ export type NewApiProxy = typeof apiProxies.$inferInsert
 
 export type RequestLog = typeof requestLogs.$inferSelect
 export type NewRequestLog = typeof requestLogs.$inferInsert
+
+export type PaymentSettlement = typeof paymentSettlements.$inferSelect
+export type NewPaymentSettlement = typeof paymentSettlements.$inferInsert
+export type PaymentIntent = typeof paymentIntents.$inferSelect
+export type NewPaymentIntent = typeof paymentIntents.$inferInsert
 
 export type SessionKey = typeof sessionKeys.$inferSelect
 export type NewSessionKey = typeof sessionKeys.$inferInsert

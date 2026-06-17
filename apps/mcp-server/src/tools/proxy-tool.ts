@@ -5,6 +5,11 @@ import { buildPaymentForProxy } from '../payment/signer.js'
 import { db, apiProxies } from '../db/client.js'
 import { eq } from 'drizzle-orm'
 import { logToolInvocation } from '../hcs/client.js'
+import { evaluateProxyToolAccess } from './proxy-tool-access.js'
+
+function isDemoModeAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production' || process.env.MCP_DEV_MODE === 'true'
+}
 
 /**
  * Variable definition from the proxy schema
@@ -129,22 +134,54 @@ export function createProxyTool(toolConfig: ToolConfig): McpToolDefinition {
           'Content-Type': 'application/json',
         }
 
-        // Build the payment header using the session key (skip in dev mode)
+        // Build the payment header using the session key.
+        // Demo bypass is only allowed in explicitly non-production contexts.
         if (context.auth.session) {
           try {
             const paymentHeader = await buildPaymentForProxy(
               context.auth.session,
               proxy,
-              context.chainId
+              context.chainId,
+              context.auth.user.walletAddress
             )
             headers['X-PAYMENT'] = paymentHeader
           } catch (payErr) {
-            console.warn('[ProxyTool] Payment header failed, using demo mode:', payErr)
-            headers['X-DEMO'] = 'true'
+            console.error('[ProxyTool] Payment header creation failed:', payErr)
+            const accessDecision = evaluateProxyToolAccess({
+              hasSession: true,
+              demoModeAllowed: isDemoModeAllowed(),
+              paymentHeaderErrorMessage: payErr instanceof Error ? payErr.message : 'Payment header creation failed',
+            })
+
+            if (!accessDecision.ok) {
+              return {
+                content: [{ type: 'text', text: accessDecision.message }],
+                isError: true,
+              }
+            }
+
+            if (accessDecision.useDemoMode) {
+              console.warn('[ProxyTool] Falling back to demo mode in non-production context')
+              headers['X-DEMO'] = 'true'
+            }
           }
         } else {
-          // Dev mode - no session, use demo bypass
-          headers['X-DEMO'] = 'true'
+          const accessDecision = evaluateProxyToolAccess({
+            hasSession: false,
+            demoModeAllowed: isDemoModeAllowed(),
+          })
+
+          if (!accessDecision.ok) {
+            return {
+              content: [{ type: 'text', text: accessDecision.message }],
+              isError: true,
+            }
+          }
+
+          if (accessDecision.useDemoMode) {
+            // Dev mode - no session, use demo bypass
+            headers['X-DEMO'] = 'true'
+          }
         }
 
         // Add variables as X-Variables header

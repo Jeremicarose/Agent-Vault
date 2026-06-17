@@ -268,7 +268,7 @@ export function useAuthorization() {
 
     console.log('[selectedScopes] Final scopes:', scopes.map(s => ({ id: s.id, type: s.type, targetsCount: (s as ExecuteScope).targets?.length })))
     return scopes
-  }, [formState.selectedScopeIds, formState.scopeParams, clientInfo?.workflowTargets, chainId])
+  }, [formState.selectedScopeIds, formState.scopeParams, clientInfo, chainId])
 
   // Check if any selected scope is non-enforceable
   const hasNonEnforceableScope = useMemo(() => {

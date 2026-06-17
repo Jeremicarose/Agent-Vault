@@ -550,6 +550,74 @@ declare function getAgentDelegatorAddress(chainId: number): Address;
  */
 declare function isAgentDelegatorDeployed(chainId: number): boolean;
 
+interface ExecuteSessionRequest {
+    sessionId: string;
+    mode: string;
+    executionData: string;
+    sessionKeySignature: string;
+    chainId: number;
+    ownerAddress: string;
+}
+declare const EXECUTE_ERROR_CODES: {
+    readonly INVALID_REQUEST: "INVALID_REQUEST";
+    readonly OWNER_MISMATCH: "OWNER_MISMATCH";
+    readonly SESSION_NOT_FOUND: "SESSION_NOT_FOUND";
+    readonly SESSION_INVALID_WINDOW: "SESSION_INVALID_WINDOW";
+    readonly OWNER_IS_SESSION_KEY: "OWNER_IS_SESSION_KEY";
+    readonly UNSUPPORTED_CHAIN: "UNSUPPORTED_CHAIN";
+    readonly DELEGATOR_NOT_DEPLOYED: "DELEGATOR_NOT_DEPLOYED";
+    readonly RELAYER_NOT_CONFIGURED: "RELAYER_NOT_CONFIGURED";
+    readonly SESSION_NOT_FOUND_ONCHAIN: "SESSION_NOT_FOUND_ONCHAIN";
+    readonly SESSION_REVOKED: "SESSION_REVOKED";
+    readonly SESSION_EXPIRED: "SESSION_EXPIRED";
+    readonly INVALID_SESSION_SIGNATURE: "INVALID_SESSION_SIGNATURE";
+    readonly TARGET_NOT_ALLOWED: "TARGET_NOT_ALLOWED";
+    readonly SELECTOR_NOT_ALLOWED: "SELECTOR_NOT_ALLOWED";
+    readonly EXECUTION_FAILED: "EXECUTION_FAILED";
+};
+type ExecuteErrorCode = typeof EXECUTE_ERROR_CODES[keyof typeof EXECUTE_ERROR_CODES];
+interface ExecuteErrorResponse {
+    error: string;
+    code: ExecuteErrorCode;
+    details?: unknown;
+}
+interface ValidationIssue$1 {
+    field: keyof ExecuteSessionRequest;
+    message: string;
+}
+type ValidationResult$1 = {
+    success: true;
+    data: ExecuteSessionRequest;
+} | {
+    success: false;
+    issues: ValidationIssue$1[];
+};
+declare function validateExecuteSessionRequest(value: unknown): ValidationResult$1;
+declare function parseExecuteErrorResponse(value: unknown): ExecuteErrorResponse | null;
+
+interface ProxyPaymentHeader {
+    intentId: string;
+    txHash: string;
+    chainId: number;
+    token: string;
+    recipient: string;
+    amount: string;
+}
+interface ValidationIssue {
+    field: keyof ProxyPaymentHeader;
+    message: string;
+}
+type ValidationResult = {
+    success: true;
+    data: ProxyPaymentHeader;
+} | {
+    success: false;
+    issues: ValidationIssue[];
+};
+declare function validateProxyPaymentHeader(value: unknown): ValidationResult;
+declare function encodeProxyPaymentHeader(value: ProxyPaymentHeader): string;
+declare function decodeProxyPaymentHeader(value: string): ValidationResult;
+
 /**
  * @x402/contracts
  *
@@ -585,4 +653,4 @@ interface TokenBudgetInfo {
     remaining: bigint;
 }
 
-export { AGENT_DELEGATOR_ADDRESS, type Session, type TokenBudgetInfo, type TokenLimit, agentDelegatorAbi, getAgentDelegatorAddress, isAgentDelegatorDeployed };
+export { AGENT_DELEGATOR_ADDRESS, EXECUTE_ERROR_CODES, type ExecuteErrorCode, type ExecuteErrorResponse, type ExecuteSessionRequest, type ProxyPaymentHeader, type Session, type TokenBudgetInfo, type TokenLimit, agentDelegatorAbi, decodeProxyPaymentHeader, encodeProxyPaymentHeader, getAgentDelegatorAddress, isAgentDelegatorDeployed, parseExecuteErrorResponse, validateExecuteSessionRequest, validateProxyPaymentHeader };

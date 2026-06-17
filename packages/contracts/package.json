@@ -15,7 +15,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "test": "tsx --test execute.test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

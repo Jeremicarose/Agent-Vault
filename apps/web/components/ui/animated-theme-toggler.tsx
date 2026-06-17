@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef } from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
@@ -16,14 +16,9 @@ export function AnimatedThemeToggler({
   duration = 400,
   ...props
 }: AnimatedThemeTogglerProps) {
-  const [mounted, setMounted] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const isDark = resolvedTheme === "dark"
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const toggleTheme = useCallback(async () => {
     if (!buttonRef.current) return
@@ -64,8 +59,8 @@ export function AnimatedThemeToggler({
     )
   }, [isDark, duration, setTheme])
 
-  // Prevent hydration mismatch by not rendering theme-dependent content until mounted
-  if (!mounted) {
+  // Prevent hydration mismatch by not rendering theme-dependent content until resolved.
+  if (!resolvedTheme) {
     return (
       <button
         className={cn(

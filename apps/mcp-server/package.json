@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsup",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test:proxy-tool": "node --import tsx --test src/tools/proxy-tool-access.test.ts",
+    "test:relay": "node --import tsx --test src/tools/relay-execution.test.ts"
   },
   "dependencies": {
+    "@x402/contracts": "workspace:*",
     "@hashgraph/sdk": "^2.81.0",
     "@hashgraphonline/standards-sdk": "^0.1.166",
     "@modelcontextprotocol/sdk": "^1.25.2",

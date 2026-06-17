@@ -36,7 +36,7 @@ export function ConnectionInfoCard({ serverSlug, copied, onCopy }: ConnectionInf
         <div className="text-sm text-muted-foreground">
           <p>To connect, the AI agent needs:</p>
           <ul className="list-disc list-inside mt-2 space-y-1">
-            <li>OAuth access token (obtained via your app's OAuth flow)</li>
+            <li>OAuth access token (obtained via your app&apos;s OAuth flow)</li>
             <li>MCP SDK client configured for SSE transport</li>
           </ul>
         </div>

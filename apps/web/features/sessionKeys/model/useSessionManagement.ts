@@ -57,7 +57,7 @@ export function useSessionManagement(): UseSessionManagementReturn {
   const { chainId } = useConnection()
   // Smart account not needed on Hedera — accounts are always ready
   const isEnabled = true
-  const smartAccountStatus = 'enabled' as const
+  const smartAccountStatus = 'ready' as const
   const delegatedTo: string | null = null
   const { sessions, isLoading: isLoadingSessions, refresh } = useSessions()
   const { grantSession: grantSessionHook, status: grantStatus, isLoading: isGranting } = useGrantSession()
@@ -65,18 +65,15 @@ export function useSessionManagement(): UseSessionManagementReturn {
 
   // Derive smart account UI status
   const smartAccountUIStatus: SmartAccountUIStatus = useMemo(() => {
-    if (smartAccountStatus === 'incompatible_delegation') {
-      return 'incompatible'
-    }
     if (!isEnabled) {
       return 'not_enabled'
     }
     return 'ready'
-  }, [smartAccountStatus, isEnabled])
+  }, [isEnabled])
 
   // Check if user can grant a new session
   const canGrantSession = useMemo(() => {
-    return isEnabled && smartAccountStatus === 'enabled'
+    return isEnabled && smartAccountStatus === 'ready'
   }, [isEnabled, smartAccountStatus])
 
   // Get the most recent active session
