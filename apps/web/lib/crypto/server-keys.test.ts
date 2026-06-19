@@ -82,6 +82,7 @@ test('decryptSessionPrivateKey returns decrypted private key', () => {
 test('getServerKeyHealth reports configured state', () => {
   assert.deepEqual(getServerKeyHealth(), {
     configured: true,
+    provider: 'env',
     publicKeyConfigured: true,
     privateKeyConfigured: true,
   })

@@ -43,6 +43,7 @@ test('buildReadinessSnapshot returns ready when operational gates are configured
 
   assert.equal(snapshot.status, 'ready')
   assert.ok(snapshot.score >= 80)
+  assert.ok(snapshot.checks.every((check) => check.action === undefined))
 })
 
 test('buildReadinessSnapshot blocks when core configuration is missing', () => {
@@ -67,4 +68,5 @@ test('buildReadinessSnapshot blocks when core configuration is missing', () => {
 
   assert.equal(snapshot.status, 'blocked')
   assert.ok(snapshot.checks.some((check) => check.status === 'blocked'))
+  assert.ok(snapshot.checks.some((check) => typeof check.action === 'string'))
 })

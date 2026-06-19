@@ -7,7 +7,9 @@
  * - NEXT_APP_URL: URL of the Next.js web app
  * - MCP_PUBLIC_URL: Public URL where MCP server is accessible (e.g., https://mcp.agentvault.tools)
  * - PORT: Server port (default 3001)
+ * - SERVER_KEYS_PROVIDER: `env` or `file` (optional, defaults to `env`)
  * - SERVER_PRIVATE_KEY: RSA private key for decrypting session keys
+ * - SERVER_PRIVATE_KEY_PATH: path to RSA private key when using file provider
  * - MCP_CLIENT_SECRET: OAuth client secret for agentvault-mcp-platform
  * - INTERNAL_SERVICE_SECRET: Shared bearer secret for MCP -> web internal calls
  */
@@ -18,7 +20,9 @@ export interface Config {
   redisUrl: string | null
   nextAppUrl: string
   mcpPublicUrl: string | null
+  serverKeysProvider: 'env' | 'file'
   serverPrivateKey: string
+  serverPrivateKeyPath: string | null
   mcpClientSecret: string
   mcpClientId: string
   internalServiceSecret: string
@@ -44,7 +48,9 @@ export function loadConfig(): Config {
     redisUrl: process.env.REDIS_URL ?? null,
     nextAppUrl: getEnvOrDefault('NEXT_APP_URL', 'http://localhost:3000'),
     mcpPublicUrl: process.env.MCP_PUBLIC_URL ?? null,
-    serverPrivateKey: getEnvOrThrow('SERVER_PRIVATE_KEY'),
+    serverKeysProvider: (getEnvOrDefault('SERVER_KEYS_PROVIDER', 'env') === 'file' ? 'file' : 'env'),
+    serverPrivateKey: process.env.SERVER_PRIVATE_KEY ?? '',
+    serverPrivateKeyPath: process.env.SERVER_PRIVATE_KEY_PATH ?? null,
     mcpClientSecret: getEnvOrThrow('MCP_CLIENT_SECRET'),
     mcpClientId: getEnvOrDefault('MCP_CLIENT_ID', 'agentvault-mcp-platform'),
     internalServiceSecret: getEnvOrThrow('INTERNAL_SERVICE_SECRET'),

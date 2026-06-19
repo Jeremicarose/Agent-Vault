@@ -7,6 +7,7 @@ export interface ReadinessCheck {
   label: string
   status: ReadinessStatus
   detail: string
+  action?: string
 }
 
 export interface ReadinessSnapshot {
@@ -45,6 +46,9 @@ export function buildReadinessSnapshot(inputs: ReadinessInputs): ReadinessSnapsh
     detail: env.relayerConfigured && env.internalServiceAuthConfigured
       ? 'Relayer key and internal service auth are configured.'
       : 'Relayer key or internal service auth is missing.',
+    action: env.relayerConfigured && env.internalServiceAuthConfigured
+      ? undefined
+      : 'Configure FACILITATOR_RELAYER_KEY and INTERNAL_SERVICE_SECRET before pilot launch.',
   })
 
   checks.push({
@@ -53,7 +57,10 @@ export function buildReadinessSnapshot(inputs: ReadinessInputs): ReadinessSnapsh
     status: env.serverKeysConfigured ? 'ready' : 'blocked',
     detail: env.serverKeysConfigured
       ? 'Server-side encryption keys are configured.'
-      : 'SERVER_PUBLIC_KEY and SERVER_PRIVATE_KEY must both be configured.',
+      : 'Server-side encryption keys are not fully configured.',
+    action: env.serverKeysConfigured
+      ? undefined
+      : 'Configure SERVER_KEYS_PROVIDER plus matching PEM env vars or key file paths.',
   })
 
   checks.push({
@@ -65,6 +72,11 @@ export function buildReadinessSnapshot(inputs: ReadinessInputs): ReadinessSnapsh
         ? 'Redis is configured and responding.'
         : 'Redis is configured but not currently healthy.'
       : 'Redis is not configured; production session durability is blocked.',
+    action: env.redisConfigured
+      ? env.redisHealthy
+        ? undefined
+        : 'Restore Redis connectivity before pilot traffic.'
+      : 'Provision REDIS_URL before pilot traffic.',
   })
 
   checks.push({
@@ -74,6 +86,9 @@ export function buildReadinessSnapshot(inputs: ReadinessInputs): ReadinessSnapsh
     detail: env.hcsConfigured
       ? 'HCS audit trail is configured.'
       : 'HCS audit trail is not configured; operator audit is incomplete.',
+    action: env.hcsConfigured
+      ? undefined
+      : 'Configure HCS operator credentials and topic IDs to enable immutable audit.',
   })
 
   checks.push({
@@ -89,6 +104,11 @@ export function buildReadinessSnapshot(inputs: ReadinessInputs): ReadinessSnapsh
       : stats.totals.upstreamFailedAfterSettlement > 0
         ? `${stats.totals.upstreamFailedAfterSettlement} settled payments still failed upstream.`
         : 'No upstream failures after settlement detected.',
+    action: !env.paymentTokenConfigured
+      ? 'Set PAYMENT_TOKEN_ADDRESS before charging real traffic.'
+      : stats.totals.upstreamFailedAfterSettlement > 0
+        ? 'Review upstream failure cases and refund/retry handling before launch.'
+        : undefined,
   })
 
   const paymentFailureRate = stats.totals.totalRequests > 0
@@ -102,6 +122,9 @@ export function buildReadinessSnapshot(inputs: ReadinessInputs): ReadinessSnapsh
     detail: paymentFailureRate > 0.1
       ? `Failure rate is ${(paymentFailureRate * 100).toFixed(1)}%.`
       : 'Recent request failure rate is within pilot tolerance.',
+    action: paymentFailureRate > 0.1
+      ? 'Reduce request failure rate below 10% before onboarding pilot users.'
+      : undefined,
   })
 
   const score = checks.reduce((total, check) => {

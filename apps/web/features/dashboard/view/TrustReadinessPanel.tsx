@@ -71,6 +71,9 @@ export function TrustReadinessPanel({ readiness }: TrustReadinessPanelProps) {
                   <Badge variant={style.badge}>{style.label}</Badge>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">{check.detail}</p>
+                {check.action && (
+                  <p className="mt-2 text-sm font-medium">{check.action}</p>
+                )}
               </div>
             )
           })}

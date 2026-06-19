@@ -7,7 +7,7 @@
     "dev:web": "pnpm --filter web dev",
     "dev:mcp": "pnpm --filter mcp-server dev",
     "build": "pnpm build:packages && pnpm --filter web --filter mcp-server build",
-    "build:packages": "pnpm --filter '@x402/contracts' build",
+    "build:packages": "pnpm --filter '@x402/contracts' --filter '@x402/key-management' build",
     "build:web": "pnpm build:packages && pnpm --filter web build",
     "build:mcp": "pnpm build:packages && pnpm --filter mcp-server build",
     "start": "pnpm --parallel --filter web --filter mcp-server start",
