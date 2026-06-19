@@ -1,6 +1,7 @@
 export { DashboardView } from './view/DashboardView'
 export { StatsCards } from './view/StatsCards'
 export { LaunchControlPanel } from './view/LaunchControlPanel'
+export { PaymentIncidentQueue } from './view/PaymentIncidentQueue'
 export { PeriodFilter } from './view/PeriodFilter'
 export { ProxyManagementCard } from './view/ProxyManagementCard'
 export { RequestLogsTable } from './view/RequestLogsTable'

@@ -10,6 +10,7 @@ import { SessionManager } from '@/features/sessionKeys/view'
 import { HcsAuditTrail } from './HcsAuditTrail'
 import { TrustReadinessPanel } from './TrustReadinessPanel'
 import { LaunchControlPanel } from './LaunchControlPanel'
+import { PaymentIncidentQueue } from './PaymentIncidentQueue'
 
 const manageLinks = [
   {
@@ -95,6 +96,8 @@ export function DashboardView() {
         <StatsCards totals={totals} />
         <TrustReadinessPanel readiness={readiness} />
       </div>
+
+      <PaymentIncidentQueue />
 
       {/* Session Keys */}
       <SessionManager />

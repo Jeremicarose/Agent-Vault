@@ -201,6 +201,9 @@ export const paymentIntents = pgTable('payment_intents', {
   paymentTxHash: varchar('payment_tx_hash', { length: 66 }).unique(),
   settlementVerifiedAt: timestamp('settlement_verified_at', { withTimezone: true }),
   failureReason: text('failure_reason'),
+  incidentStatus: varchar('incident_status', { length: 32 }).default('none').notNull(),
+  incidentNotes: text('incident_notes'),
+  incidentUpdatedAt: timestamp('incident_updated_at', { withTimezone: true }),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
