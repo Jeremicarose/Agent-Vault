@@ -1,4 +1,4 @@
-import type { DashboardStats } from './types'
+import type { DashboardStats, LaunchSummary, PilotPhase } from './types'
 
 export type ReadinessStatus = 'ready' | 'attention' | 'blocked'
 
@@ -14,6 +14,68 @@ export interface ReadinessSnapshot {
   status: ReadinessStatus
   score: number
   checks: ReadinessCheck[]
+}
+
+export function buildLaunchSummary(readiness: ReadinessSnapshot, stats: DashboardStats): LaunchSummary {
+  const blockedChecks = readiness.checks.filter((check) => check.status === 'blocked')
+  const attentionChecks = readiness.checks.filter((check) => check.status === 'attention')
+  const recentFailureRate = stats.totals.totalRequests > 0
+    ? (stats.totals.paymentFailedRequests + stats.totals.proxyErrors) / stats.totals.totalRequests
+    : 0
+
+  const phases: PilotPhase[] = [
+    {
+      id: 'configure',
+      label: 'Configuration',
+      status: blockedChecks.some((check) => ['relay', 'keys', 'redis'].includes(check.id))
+        ? 'blocked'
+        : blockedChecks.length > 0 || attentionChecks.some((check) => ['audit'].includes(check.id))
+          ? 'attention'
+          : 'ready',
+      summary: 'Keys, relayer, Redis, and audit plumbing must be in place before live traffic.',
+    },
+    {
+      id: 'validate',
+      label: 'Validation',
+      status: attentionChecks.some((check) => ['traffic', 'payments'].includes(check.id))
+        ? 'attention'
+        : blockedChecks.some((check) => ['payments'].includes(check.id))
+          ? 'blocked'
+          : 'ready',
+      summary: 'Run synthetic traffic and verify settlement, audit, and upstream success paths.',
+    },
+    {
+      id: 'pilot',
+      label: 'Pilot',
+      status: readiness.status,
+      summary: readiness.status === 'ready'
+        ? 'The current posture supports a limited design-partner pilot.'
+        : readiness.status === 'attention'
+          ? 'A pilot is possible, but only after the listed attention items are actively managed.'
+          : 'Do not onboard pilot users until the blocked items are resolved.',
+    },
+  ]
+
+  const recommendation =
+    readiness.status === 'ready'
+      ? 'Start a narrow pilot with explicit rollback ownership.'
+      : readiness.status === 'attention'
+        ? 'Stabilize the attention items before inviting external pilot traffic.'
+        : 'Resolve the blocked checks before treating this environment as pilot-ready.'
+
+  const topActions = [...blockedChecks, ...attentionChecks]
+    .map((check) => check.action)
+    .filter((action): action is string => Boolean(action))
+    .slice(0, 4)
+
+  return {
+    recommendation,
+    blockedCount: blockedChecks.length,
+    attentionCount: attentionChecks.length,
+    recentFailureRate,
+    topActions,
+    phases,
+  }
 }
 
 export interface ReadinessInputs {

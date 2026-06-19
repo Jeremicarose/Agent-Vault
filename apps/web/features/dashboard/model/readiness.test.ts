@@ -25,6 +25,14 @@ const baseStats: DashboardStats = {
     score: 0,
     checks: [],
   },
+  launchSummary: {
+    recommendation: '',
+    blockedCount: 0,
+    attentionCount: 0,
+    recentFailureRate: 0,
+    topActions: [],
+    phases: [],
+  },
 }
 
 test('buildReadinessSnapshot returns ready when operational gates are configured', () => {

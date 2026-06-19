@@ -5,7 +5,7 @@ import { withAuth } from '@/lib/auth'
 import { z } from 'zod'
 import { isRedisHealthy } from '@/lib/redis/client'
 import { getServerKeyHealth } from '@/lib/crypto/server-keys'
-import { buildReadinessSnapshot } from '@/features/dashboard/model/readiness'
+import { buildLaunchSummary, buildReadinessSnapshot } from '@/features/dashboard/model/readiness'
 import type { DashboardStats } from '@/features/dashboard/model/types'
 
 const querySchema = z.object({
@@ -77,6 +77,33 @@ export const GET = withAuth(async (user, request) => {
             label: 'Traffic bootstrap',
             status: 'blocked',
             detail: 'No APIs or traffic exist yet. Create a service before pilot readiness can be assessed.',
+          },
+        ],
+      },
+      launchSummary: {
+        recommendation: 'Create your first service before planning a pilot.',
+        blockedCount: 1,
+        attentionCount: 0,
+        recentFailureRate: 0,
+        topActions: ['Create your first API proxy and run synthetic traffic before pilot review.'],
+        phases: [
+          {
+            id: 'configure',
+            label: 'Configuration',
+            status: 'blocked',
+            summary: 'No service is configured yet.',
+          },
+          {
+            id: 'validate',
+            label: 'Validation',
+            status: 'blocked',
+            summary: 'No traffic exists to validate execution paths.',
+          },
+          {
+            id: 'pilot',
+            label: 'Pilot',
+            status: 'blocked',
+            summary: 'Pilot readiness cannot be assessed before bootstrap.',
           },
         ],
       },
@@ -243,6 +270,14 @@ export const GET = withAuth(async (user, request) => {
       score: 0,
       checks: [],
     },
+    launchSummary: {
+      recommendation: '',
+      blockedCount: 0,
+      attentionCount: 0,
+      recentFailureRate: 0,
+      topActions: [],
+      phases: [],
+    },
   }
 
   const readiness = buildReadinessSnapshot({
@@ -263,6 +298,20 @@ export const GET = withAuth(async (user, request) => {
     perProxy,
     recentLogs,
     readiness,
+    launchSummary: buildLaunchSummary(readiness, {
+      totals,
+      perProxy,
+      recentLogs,
+      readiness,
+      launchSummary: {
+        recommendation: '',
+        blockedCount: 0,
+        attentionCount: 0,
+        recentFailureRate: 0,
+        topActions: [],
+        phases: [],
+      },
+    }),
   }
 
   return NextResponse.json(response)

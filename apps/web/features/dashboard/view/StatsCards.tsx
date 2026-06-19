@@ -12,25 +12,25 @@ interface StatsCardsProps {
 export function StatsCards({ totals }: StatsCardsProps) {
   const stats = [
     {
-      title: 'Total APIs',
+      title: 'Live Services',
       value: totals.apiCount.toString(),
       icon: Layers,
-      description: 'Active API proxies',
+      description: 'Public and private proxies',
     },
     {
-      title: 'Total Requests',
+      title: 'Request Throughput',
       value: totals.totalRequests.toLocaleString(),
       icon: Activity,
-      description: 'All-time requests',
+      description: 'Observed calls in this workspace',
     },
     {
-      title: 'Success Rate',
+      title: 'Delivery Health',
       value: formatSuccessRate(totals.successfulRequests, totals.totalRequests),
       icon: CheckCircle,
-      description: `${totals.successfulRequests.toLocaleString()} successful`,
+      description: `${totals.successfulRequests.toLocaleString()} successful requests`,
     },
     {
-      title: 'Total Earnings',
+      title: 'Captured Revenue',
       value: formatEarnings(totals.totalEarnings),
       icon: DollarSign,
       description: 'USDC.E earned',
@@ -42,7 +42,7 @@ export function StatsCards({ totals }: StatsCardsProps) {
       description: `${totals.settledPayments.toLocaleString()} settled payments`,
     },
     {
-      title: 'Payment Failures',
+      title: 'Failure Load',
       value: totals.paymentFailedRequests.toLocaleString(),
       icon: AlertTriangle,
       description: `${totals.proxyErrors.toLocaleString()} proxy errors`,
@@ -62,11 +62,11 @@ export function StatsCards({ totals }: StatsCardsProps) {
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
-          <Card key={stat.title}>
+          <Card key={stat.title} className="border-border/70 bg-card/95">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               <Icon className="size-4 text-muted-foreground" />

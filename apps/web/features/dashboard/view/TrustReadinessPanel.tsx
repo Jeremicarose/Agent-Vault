@@ -35,7 +35,7 @@ export function TrustReadinessPanel({ readiness }: TrustReadinessPanelProps) {
   const SummaryIcon = readiness.status === 'ready' ? ShieldCheck : summary.icon
 
   return (
-    <Card>
+    <Card className="h-full border-border/70 bg-card/95">
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -54,14 +54,14 @@ export function TrustReadinessPanel({ readiness }: TrustReadinessPanelProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3">
           {readiness.checks.map((check) => {
             const style = STATUS_STYLE[check.status]
             const Icon = style.icon
             return (
               <div
                 key={check.id}
-                className="rounded-lg border bg-muted/30 p-4"
+                className="rounded-2xl border border-border/70 bg-muted/20 p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">

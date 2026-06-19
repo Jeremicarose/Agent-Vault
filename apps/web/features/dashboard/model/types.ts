@@ -20,12 +20,29 @@ export interface ReadinessCheck {
   label: string
   status: 'ready' | 'attention' | 'blocked'
   detail: string
+  action?: string
 }
 
 export interface ReadinessSnapshot {
   status: 'ready' | 'attention' | 'blocked'
   score: number
   checks: ReadinessCheck[]
+}
+
+export interface PilotPhase {
+  id: 'configure' | 'validate' | 'pilot'
+  label: string
+  status: 'ready' | 'attention' | 'blocked'
+  summary: string
+}
+
+export interface LaunchSummary {
+  recommendation: string
+  blockedCount: number
+  attentionCount: number
+  recentFailureRate: number
+  topActions: string[]
+  phases: PilotPhase[]
 }
 
 export interface ProxyWithMetrics {
@@ -61,4 +78,5 @@ export interface DashboardStats {
   perProxy: ProxyWithMetrics[]
   recentLogs: RequestLog[]
   readiness: ReadinessSnapshot
+  launchSummary: LaunchSummary
 }

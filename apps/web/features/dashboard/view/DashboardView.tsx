@@ -9,6 +9,7 @@ import { RequestLogsTable } from './RequestLogsTable'
 import { SessionManager } from '@/features/sessionKeys/view'
 import { HcsAuditTrail } from './HcsAuditTrail'
 import { TrustReadinessPanel } from './TrustReadinessPanel'
+import { LaunchControlPanel } from './LaunchControlPanel'
 
 const manageLinks = [
   {
@@ -36,6 +37,7 @@ export function DashboardView() {
     totals,
     recentLogs,
     readiness,
+    stats,
     isLoading,
     error,
     period,
@@ -80,10 +82,19 @@ export function DashboardView() {
         <PeriodFilter period={period} onPeriodChange={setPeriod} />
       </div>
 
-      {/* Stats */}
-      <StatsCards totals={totals} />
+      <LaunchControlPanel summary={stats?.launchSummary || {
+        recommendation: 'Dashboard metrics are still loading.',
+        blockedCount: 0,
+        attentionCount: 0,
+        recentFailureRate: 0,
+        topActions: [],
+        phases: [],
+      }} />
 
-      <TrustReadinessPanel readiness={readiness} />
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <StatsCards totals={totals} />
+        <TrustReadinessPanel readiness={readiness} />
+      </div>
 
       {/* Session Keys */}
       <SessionManager />
