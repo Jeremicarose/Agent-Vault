@@ -13,6 +13,7 @@ import {
   getIncidentBadgeVariant,
   type PaymentIncidentAction,
 } from '../model/payment-incidents'
+import { PaymentIncidentDetailDialog } from './PaymentIncidentDetailDialog'
 
 function truncateAddress(address: string | null) {
   if (!address) return '-'
@@ -22,6 +23,7 @@ function truncateAddress(address: string | null) {
 export function PaymentIncidentQueue() {
   const { incidents, isLoading, error, updateIncident, isUpdating } = usePaymentIncidents()
   const [notes, setNotes] = useState<Record<string, string>>({})
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null)
 
   const openIncidents = useMemo(
     () => incidents.filter((incident) => incident.incidentStatus !== 'resolved'),
@@ -88,6 +90,13 @@ export function PaymentIncidentQueue() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedIncidentId(incident.id)}
+                    >
+                      Inspect
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       disabled={isUpdating}
@@ -143,6 +152,15 @@ export function PaymentIncidentQueue() {
           </div>
         )}
       </CardContent>
+      <PaymentIncidentDetailDialog
+        incidentId={selectedIncidentId}
+        open={selectedIncidentId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedIncidentId(null)
+          }
+        }}
+      />
     </Card>
   )
 }
