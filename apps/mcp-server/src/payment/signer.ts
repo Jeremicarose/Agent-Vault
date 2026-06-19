@@ -1,11 +1,4 @@
 import {
-  createPrivateKey,
-  privateDecrypt,
-  createDecipheriv,
-  constants,
-  KeyObject,
-} from 'crypto'
-import {
   type Hex,
   type Address,
   encodeFunctionData,
@@ -20,9 +13,9 @@ import {
   parseExecuteErrorResponse,
   type ProxyPaymentHeader,
 } from '@x402/contracts'
+import { buildInternalServiceAuthHeader } from '@web/lib/auth/internal'
 import { db, paymentIntents, type SessionKey, type ApiProxy } from '../db/client.js'
-
-const AES_ALGORITHM = 'aes-256-gcm'
+import { decryptSessionPrivateKey, type HybridEncryptedData } from '../crypto/server-keys.js'
 
 const ERC20_TRANSFER_ABI = [
   {
@@ -48,55 +41,7 @@ const EXECUTE_WITH_SESSION_TYPES = {
   ],
 } as const
 
-interface HybridEncryptedData {
-  encryptedKey: string
-  iv: string
-  ciphertext: string
-  tag: string
-}
-
-let serverPrivateKey: KeyObject | null = null
-
-function normalizePem(pem: string): string {
-  return pem.replace(/\\n/g, '\n')
-}
-
-function getServerPrivateKey(): KeyObject {
-  if (serverPrivateKey) return serverPrivateKey
-  const privateKeyPem = process.env.SERVER_PRIVATE_KEY
-  if (!privateKeyPem) {
-    throw new Error('SERVER_PRIVATE_KEY environment variable is not set')
-  }
-  serverPrivateKey = createPrivateKey(normalizePem(privateKeyPem))
-  return serverPrivateKey
-}
-
-function decryptHybrid(encrypted: HybridEncryptedData): string {
-  const privateKey = getServerPrivateKey()
-  const encryptedKeyBuffer = Buffer.from(encrypted.encryptedKey, 'base64')
-  const aesKey = privateDecrypt(
-    {
-      key: privateKey,
-      padding: constants.RSA_PKCS1_OAEP_PADDING,
-      oaepHash: 'sha256',
-    },
-    encryptedKeyBuffer
-  )
-  const iv = Buffer.from(encrypted.iv, 'base64')
-  const ciphertext = Buffer.from(encrypted.ciphertext, 'base64')
-  const tag = Buffer.from(encrypted.tag, 'base64')
-  const decipher = createDecipheriv(AES_ALGORITHM, aesKey, iv)
-  decipher.setAuthTag(tag)
-  let plaintext = decipher.update(ciphertext, undefined, 'utf8')
-  plaintext += decipher.final('utf8')
-  return plaintext
-}
-
-export function decryptSessionKey(encryptedPrivateKey: HybridEncryptedData): Hex {
-  const decrypted = decryptHybrid(encryptedPrivateKey)
-  const parsed = JSON.parse(decrypted) as { privateKey: string }
-  return parsed.privateKey as Hex
-}
+export const decryptSessionKey = decryptSessionPrivateKey
 
 /**
  * Build single-mode execution data for ERC-7579.
@@ -231,7 +176,10 @@ export async function buildPaymentForProxy(
 
   const response = await fetch(`${nextAppUrl}/api/execute`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...buildInternalServiceAuthHeader(),
+    },
     body: paymentPayload,
   })
 

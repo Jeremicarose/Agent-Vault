@@ -6,6 +6,26 @@ export interface DashboardTotals {
   successfulRequests: number
   failedRequests: number
   totalEarnings: number
+  paymentFailedRequests: number
+  proxyErrors: number
+  uniqueRequesters: number
+  settledPayments: number
+  settledVolume: number
+  upstreamFailedAfterSettlement: number
+  pendingPaymentIntents: number
+}
+
+export interface ReadinessCheck {
+  id: string
+  label: string
+  status: 'ready' | 'attention' | 'blocked'
+  detail: string
+}
+
+export interface ReadinessSnapshot {
+  status: 'ready' | 'attention' | 'blocked'
+  score: number
+  checks: ReadinessCheck[]
 }
 
 export interface ProxyWithMetrics {
@@ -40,4 +60,5 @@ export interface DashboardStats {
   totals: DashboardTotals
   perProxy: ProxyWithMetrics[]
   recentLogs: RequestLog[]
+  readiness: ReadinessSnapshot
 }

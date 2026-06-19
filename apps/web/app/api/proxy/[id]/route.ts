@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db, apiProxies, paymentIntents, paymentSettlements, requestLogs } from '@/lib/db'
 import { eq } from 'drizzle-orm'
-import { decryptHybrid, type HybridEncryptedData } from '@/lib/crypto/encryption'
+import { decryptHeaderMap, type HybridEncryptedData } from '@/lib/crypto/server-keys'
 import {
   validateVariables,
   substituteVariables,
@@ -10,6 +10,7 @@ import {
 } from '@/features/proxy/model/variables'
 import { decodeProxyPaymentHeader } from '@x402/contracts'
 import { evaluateProxyAccess } from './access'
+import { validateOutboundUrl } from './outbound-guard'
 import { verifyPaymentSettlement } from '@/app/api/pay/settlement'
 
 type RouteParams = { params: Promise<{ id: string }> }
@@ -41,6 +42,8 @@ async function handleProxyRequest(
   let proxyId = id
   let status: 'success' | 'payment_failed' | 'payment_required' | 'proxy_error' | 'target_error' = 'proxy_error'
   let requesterWallet: string | null = null
+  let paymentIntentId: string | null = null
+  let settlementTxHash: string | null = null
 
   try {
     const proxy = await db.query.apiProxies.findFirst({
@@ -172,6 +175,8 @@ async function handleProxyRequest(
           )
         }
 
+        paymentIntentId = intent.id
+
         if (
           intent.proxyId !== proxy.id ||
           intent.chainId !== decodedPaymentHeader.data.chainId ||
@@ -218,6 +223,7 @@ async function handleProxyRequest(
         }
 
         requesterWallet = settlement.from.toLowerCase()
+        settlementTxHash = settlement.txHash
 
         await db.insert(paymentSettlements).values({
           txHash: settlement.txHash,
@@ -231,8 +237,9 @@ async function handleProxyRequest(
 
         await db.update(paymentIntents)
           .set({
-            status: 'settled',
+            status: 'settlement_verified',
             paymentTxHash: settlement.txHash,
+            settlementVerifiedAt: new Date(),
             updatedAt: new Date(),
           })
           .where(eq(paymentIntents.id, intent.id))
@@ -266,11 +273,28 @@ async function handleProxyRequest(
 
     if (isSuccess) {
       status = 'success'
+      if (paymentIntentId) {
+        await db.update(paymentIntents)
+          .set({
+            status: 'settled',
+            updatedAt: new Date(),
+          })
+          .where(eq(paymentIntents.id, paymentIntentId))
+      }
     } else {
       status = 'target_error'
+      if (paymentIntentId) {
+        await db.update(paymentIntents)
+          .set({
+            status: 'settled_upstream_failed',
+            failureReason: `Upstream returned ${targetResponse.status} ${targetResponse.statusText}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(paymentIntents.id, paymentIntentId))
+      }
     }
 
-    await logRequest(proxyId, requesterWallet, status)
+    await logRequest(proxyId, requesterWallet, status, paymentIntentId, settlementTxHash)
 
     return new NextResponse(targetResponse.body, {
       status: targetResponse.status,
@@ -279,7 +303,16 @@ async function handleProxyRequest(
     })
   } catch (error) {
     console.error('[Proxy] Unexpected error:', error)
-    await logRequest(proxyId, requesterWallet, status)
+    if (paymentIntentId && status !== 'success') {
+      await db.update(paymentIntents)
+        .set({
+          status: 'failed',
+          failureReason: error instanceof Error ? error.message : 'Internal server error',
+          updatedAt: new Date(),
+        })
+        .where(eq(paymentIntents.id, paymentIntentId))
+    }
+    await logRequest(proxyId, requesterWallet, status, paymentIntentId, settlementTxHash)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -315,7 +348,7 @@ async function proxyToTarget(
 
   if (proxy.encryptedHeaders) {
     try {
-      const decryptedHeaders = decryptHybrid(proxy.encryptedHeaders as HybridEncryptedData)
+      const decryptedHeaders = decryptHeaderMap(proxy.encryptedHeaders as HybridEncryptedData)
       for (const [key, value] of Object.entries(decryptedHeaders)) {
         targetHeaders.set(key, value)
       }
@@ -356,6 +389,11 @@ async function proxyToTarget(
     targetUrl = `${targetUrl}${separator}${queryString}`
   }
 
+  const outboundValidation = await validateOutboundUrl(targetUrl)
+  if (!outboundValidation.ok) {
+    throw new Error(outboundValidation.error)
+  }
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS)
 
@@ -365,8 +403,47 @@ async function proxyToTarget(
       headers: targetHeaders,
       body,
       signal: controller.signal,
+      redirect: 'manual',
     })
     clearTimeout(timeoutId)
+
+    if (targetResponse.status >= 300 && targetResponse.status < 400) {
+      const location = targetResponse.headers.get('location')
+      if (!location) {
+        throw new Error('Redirect response missing location header')
+      }
+
+      const redirectedUrl = new URL(location, targetUrl).toString()
+      const redirectValidation = await validateOutboundUrl(redirectedUrl)
+      if (!redirectValidation.ok) {
+        throw new Error(redirectValidation.error)
+      }
+
+      const redirectedResponse = await fetch(redirectedUrl, {
+        method,
+        headers: targetHeaders,
+        body,
+        signal: controller.signal,
+        redirect: 'manual',
+      })
+
+      const redirectedHeaders = new Headers()
+      const filteredHeaders = [
+        'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
+        'te', 'trailers', 'transfer-encoding', 'upgrade', 'content-encoding', 'content-length',
+      ]
+      redirectedResponse.headers.forEach((value, key) => {
+        if (!filteredHeaders.includes(key.toLowerCase())) redirectedHeaders.set(key, value)
+      })
+
+      const redirectedBody = await redirectedResponse.arrayBuffer()
+      return {
+        status: redirectedResponse.status,
+        statusText: redirectedResponse.statusText,
+        body: redirectedBody,
+        headers: redirectedHeaders,
+      }
+    }
 
     const responseHeaders = new Headers()
     const filteredHeaders = [
@@ -386,9 +463,21 @@ async function proxyToTarget(
   }
 }
 
-async function logRequest(proxyId: string, requesterWallet: string | null, status: string): Promise<void> {
+async function logRequest(
+  proxyId: string,
+  requesterWallet: string | null,
+  status: string,
+  paymentIntentId?: string | null,
+  settlementTxHash?: string | null
+): Promise<void> {
   try {
-    await db.insert(requestLogs).values({ proxyId, requesterWallet, status })
+    await db.insert(requestLogs).values({
+      proxyId,
+      requesterWallet,
+      status,
+      paymentIntentId: paymentIntentId ?? null,
+      settlementTxHash: settlementTxHash ?? null,
+    })
   } catch (error) {
     console.error('[Proxy] Failed to log request:', error)
   }

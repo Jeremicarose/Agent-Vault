@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
-import { db, apiProxies, requestLogs } from '@/lib/db'
+import { db, apiProxies, paymentIntents, paymentSettlements, requestLogs } from '@/lib/db'
 import { eq, sql, desc, and, gte } from 'drizzle-orm'
 import { withAuth } from '@/lib/auth'
 import { z } from 'zod'
+import { isRedisHealthy } from '@/lib/redis/client'
+import { getServerKeyHealth } from '@/lib/crypto/server-keys'
+import { buildReadinessSnapshot } from '@/features/dashboard/model/readiness'
+import type { DashboardStats } from '@/features/dashboard/model/types'
 
 const querySchema = z.object({
   period: z.enum(['all', '7d', '30d']).default('all'),
@@ -47,17 +51,38 @@ export const GET = withAuth(async (user, request) => {
   })
 
   if (userProxies.length === 0) {
-    return NextResponse.json({
+    const emptyStats: DashboardStats = {
       totals: {
         apiCount: 0,
         totalRequests: 0,
         successfulRequests: 0,
         failedRequests: 0,
         totalEarnings: 0,
+        paymentFailedRequests: 0,
+        proxyErrors: 0,
+        uniqueRequesters: 0,
+        settledPayments: 0,
+        settledVolume: 0,
+        upstreamFailedAfterSettlement: 0,
+        pendingPaymentIntents: 0,
       },
       perProxy: [],
       recentLogs: [],
-    })
+      readiness: {
+        status: 'blocked',
+        score: 0,
+        checks: [
+          {
+            id: 'bootstrap',
+            label: 'Traffic bootstrap',
+            status: 'blocked',
+            detail: 'No APIs or traffic exist yet. Create a service before pilot readiness can be assessed.',
+          },
+        ],
+      },
+    }
+
+    return NextResponse.json(emptyStats)
   }
 
   const proxyIds = userProxies.map((p) => p.id)
@@ -136,7 +161,48 @@ export const GET = withAuth(async (user, request) => {
     successfulRequests: perProxy.reduce((sum, p) => sum + p.successfulRequests, 0),
     failedRequests: perProxy.reduce((sum, p) => sum + p.failedRequests, 0),
     totalEarnings: perProxy.reduce((sum, p) => sum + p.earnings, 0),
+    paymentFailedRequests: perProxy.reduce((sum, p) => sum + (metricsMap.get(p.id)?.failedPayment || 0), 0),
+    proxyErrors: perProxy.reduce((sum, p) => sum + (metricsMap.get(p.id)?.proxyError || 0), 0),
+    uniqueRequesters: 0,
+    settledPayments: 0,
+    settledVolume: 0,
+    upstreamFailedAfterSettlement: 0,
+    pendingPaymentIntents: 0,
   }
+
+  const uniqueRequesterQuery = await db
+    .select({
+      requesterWallet: requestLogs.requesterWallet,
+    })
+    .from(requestLogs)
+    .where(sql`${requestLogs.proxyId} IN (${sql.join(proxyIds.map(id => sql`${id}`), sql`, `)})`)
+
+  const uniqueRequesters = new Set(
+    uniqueRequesterQuery
+      .map((row) => row.requesterWallet)
+      .filter((wallet): wallet is string => Boolean(wallet))
+  )
+
+  const settlementRows = await db
+    .select({
+      amount: paymentSettlements.amount,
+    })
+    .from(paymentSettlements)
+    .where(sql`${paymentSettlements.proxyId} IN (${sql.join(proxyIds.map(id => sql`${id}`), sql`, `)})`)
+
+  totals.uniqueRequesters = uniqueRequesters.size
+  totals.settledPayments = settlementRows.length
+  totals.settledVolume = settlementRows.reduce((sum, row) => sum + row.amount, 0)
+
+  const paymentIntentRows = await db
+    .select({
+      status: paymentIntents.status,
+    })
+    .from(paymentIntents)
+    .where(sql`${paymentIntents.proxyId} IN (${sql.join(proxyIds.map(id => sql`${id}`), sql`, `)})`)
+
+  totals.upstreamFailedAfterSettlement = paymentIntentRows.filter((row) => row.status === 'settled_upstream_failed').length
+  totals.pendingPaymentIntents = paymentIntentRows.filter((row) => row.status === 'pending').length
 
   // Get recent logs (last 20)
   const recentLogsQuery = await db
@@ -164,9 +230,40 @@ export const GET = withAuth(async (user, request) => {
     timestamp: log.timestamp.toISOString(),
   }))
 
-  return NextResponse.json({
+  const redisConfigured = Boolean(process.env.REDIS_URL)
+  const redisHealthy = redisConfigured ? await isRedisHealthy() : false
+  const keyHealth = getServerKeyHealth()
+
+  const readinessBaseStats: DashboardStats = {
     totals,
     perProxy,
     recentLogs,
+    readiness: {
+      status: 'blocked',
+      score: 0,
+      checks: [],
+    },
+  }
+
+  const readiness = buildReadinessSnapshot({
+    stats: readinessBaseStats,
+    env: {
+      internalServiceAuthConfigured: Boolean(process.env.INTERNAL_SERVICE_SECRET),
+      redisConfigured,
+      redisHealthy,
+      hcsConfigured: Boolean(process.env.HCS_TOPIC_ID),
+      serverKeysConfigured: keyHealth.configured,
+      paymentTokenConfigured: Boolean(process.env.PAYMENT_TOKEN_ADDRESS),
+      relayerConfigured: Boolean(process.env.FACILITATOR_RELAYER_KEY),
+    },
   })
+
+  const response: DashboardStats = {
+    totals,
+    perProxy,
+    recentLogs,
+    readiness,
+  }
+
+  return NextResponse.json(response)
 })

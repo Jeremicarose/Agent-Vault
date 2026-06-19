@@ -1,11 +1,4 @@
 import { z } from 'zod'
-import {
-  createPrivateKey,
-  privateDecrypt,
-  createDecipheriv,
-  constants,
-  type KeyObject,
-} from 'crypto'
 import { type Hex, type Address } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import {
@@ -17,6 +10,11 @@ import { executeWorkflow, type WorkflowExecutionDeps } from '../workflows/engine
 import type { WorkflowDefinition, VariableDefinition } from '../workflows/types.js'
 import { db, apiProxies, workflowTemplates, type SessionKey } from '../db/client.js'
 import { eq } from 'drizzle-orm'
+import {
+  decryptHeaderMap,
+  decryptSessionPrivateKey,
+  type HybridEncryptedData,
+} from '../crypto/server-keys.js'
 // Inlined helper for AgentDelegator domain
 function buildAgentDelegatorDomain(ownerAddress: Address, chainId: number) {
   return {
@@ -106,75 +104,8 @@ function buildInputSchema(variables: VariableDefinition[] | null | undefined): z
   return z.object(shape)
 }
 
-// AES encryption algorithm
-const AES_ALGORITHM = 'aes-256-gcm'
-
-// Cache server private key
-let serverPrivateKey: KeyObject | null = null
-
-/**
- * Get the server's RSA private key
- */
-function getServerPrivateKey(): KeyObject {
-  if (serverPrivateKey) return serverPrivateKey
-
-  const privateKeyPem = process.env.SERVER_PRIVATE_KEY
-  if (!privateKeyPem) {
-    throw new Error('SERVER_PRIVATE_KEY environment variable is not set')
-  }
-
-  serverPrivateKey = createPrivateKey(privateKeyPem.replace(/\\n/g, '\n'))
-  return serverPrivateKey
-}
-
-/**
- * Hybrid encrypted data structure
- */
-interface HybridEncryptedData {
-  encryptedKey: string
-  iv: string
-  ciphertext: string
-  tag: string
-}
-
-/**
- * Decrypt hybrid encrypted data
- */
-function decryptHybrid(encrypted: HybridEncryptedData): string {
-  const privateKey = getServerPrivateKey()
-
-  // Decrypt the AES key with RSA-OAEP
-  const encryptedKeyBuffer = Buffer.from(encrypted.encryptedKey, 'base64')
-  const aesKey = privateDecrypt(
-    {
-      key: privateKey,
-      padding: constants.RSA_PKCS1_OAEP_PADDING,
-      oaepHash: 'sha256',
-    },
-    encryptedKeyBuffer
-  )
-
-  // Decrypt the data with AES-GCM
-  const iv = Buffer.from(encrypted.iv, 'base64')
-  const ciphertext = Buffer.from(encrypted.ciphertext, 'base64')
-  const tag = Buffer.from(encrypted.tag, 'base64')
-
-  const decipher = createDecipheriv(AES_ALGORITHM, aesKey, iv)
-  decipher.setAuthTag(tag)
-
-  let plaintext = decipher.update(ciphertext, undefined, 'utf8')
-  plaintext += decipher.final('utf8')
-
-  return plaintext
-}
-
-/**
- * Decrypt a session key's private key
- */
 function decryptSessionKey(encryptedPrivateKey: HybridEncryptedData): Hex {
-  const decrypted = decryptHybrid(encryptedPrivateKey)
-  const parsed = JSON.parse(decrypted) as { privateKey: string }
-  return parsed.privateKey as Hex
+  return decryptSessionPrivateKey(encryptedPrivateKey)
 }
 
 /**
@@ -187,8 +118,7 @@ function decryptProxyHeaders(encryptedHeaders: unknown): Record<string, string> 
 
   try {
     const encrypted = encryptedHeaders as HybridEncryptedData
-    const decrypted = decryptHybrid(encrypted)
-    return JSON.parse(decrypted)
+    return decryptHeaderMap(encrypted)
   } catch (error) {
     console.error('[WorkflowTool] Failed to decrypt headers:', error)
     return {}

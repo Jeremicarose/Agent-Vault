@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db, sessionKeys } from '@/lib/db'
 import { eq, and } from 'drizzle-orm'
 import { withAuth } from '@/lib/auth'
-import { decryptHybrid } from '@/lib/crypto/encryption'
+import { decryptSessionPrivateKey } from '@/lib/crypto/server-keys'
 import { privateKeyToAccount } from 'viem/accounts'
 import { type Hex, type Address, keccak256, encodeAbiParameters, concat } from 'viem'
 import { isContractApproved } from '@/lib/sessionKeys/flattenScopes'
@@ -169,8 +169,7 @@ export const POST = withAuth(async (user, request, context) => {
   }
 
   try {
-    const decrypted = decryptHybrid(session.encryptedPrivateKey)
-    const privateKey = decrypted.privateKey as Hex
+    const privateKey = decryptSessionPrivateKey(session.encryptedPrivateKey) as Hex
     const account = privateKeyToAccount(privateKey)
 
     if (account.address.toLowerCase() !== session.sessionKeyAddress.toLowerCase()) {

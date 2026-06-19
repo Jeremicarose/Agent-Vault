@@ -8,6 +8,7 @@ import { PeriodFilter } from './PeriodFilter'
 import { RequestLogsTable } from './RequestLogsTable'
 import { SessionManager } from '@/features/sessionKeys/view'
 import { HcsAuditTrail } from './HcsAuditTrail'
+import { TrustReadinessPanel } from './TrustReadinessPanel'
 
 const manageLinks = [
   {
@@ -34,6 +35,7 @@ export function DashboardView() {
   const {
     totals,
     recentLogs,
+    readiness,
     isLoading,
     error,
     period,
@@ -80,6 +82,8 @@ export function DashboardView() {
 
       {/* Stats */}
       <StatsCards totals={totals} />
+
+      <TrustReadinessPanel readiness={readiness} />
 
       {/* Session Keys */}
       <SessionManager />

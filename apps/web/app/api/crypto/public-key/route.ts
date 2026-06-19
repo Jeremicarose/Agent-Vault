@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerPublicKeyPem } from '@/lib/crypto/encryption'
+import { getServerKeyHealth, getServerPublicKeyPem } from '@/lib/crypto/server-keys'
 
 /**
  * GET /api/crypto/public-key
@@ -7,6 +7,11 @@ import { getServerPublicKeyPem } from '@/lib/crypto/encryption'
  */
 export async function GET() {
   try {
+    const health = getServerKeyHealth()
+    if (!health.configured) {
+      throw new Error(health.error || 'Server encryption not configured')
+    }
+
     const publicKey = getServerPublicKeyPem()
 
     return NextResponse.json({
