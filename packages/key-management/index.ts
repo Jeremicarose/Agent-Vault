@@ -2,6 +2,7 @@ import {
   constants,
   createCipheriv,
   createDecipheriv,
+  createHash,
   createPrivateKey,
   createPublicKey,
   privateDecrypt,
@@ -9,7 +10,7 @@ import {
   randomBytes,
   type KeyObject,
 } from 'crypto'
-import { readFileSync } from 'fs'
+import { readFileSync, statSync } from 'fs'
 
 const AES_ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 12
@@ -35,6 +36,11 @@ export interface KeyProviderHealth {
   provider: 'env' | 'file'
   publicKeyConfigured: boolean
   privateKeyConfigured: boolean
+  publicKeyFingerprint?: string
+  privateKeyFingerprint?: string
+  loadedAt?: string
+  publicKeyLastModifiedAt?: string
+  privateKeyLastModifiedAt?: string
   error?: string
 }
 
@@ -43,10 +49,15 @@ export type KeyProviderHealthType = KeyProviderHealth
 
 export interface KeyProvider {
   getHealth(): KeyProviderHealth
+  refresh(): void
   getPublicKeyPem(): string
   getPrivateKeyPem(): string
   getPublicKeyObject(): KeyObject
   getPrivateKeyObject(): KeyObject
+}
+
+function fingerprintPem(pem: string): string {
+  return createHash('sha256').update(pem).digest('hex').slice(0, 16)
 }
 
 function normalizePem(pem: string): string {
@@ -79,6 +90,7 @@ export function createServerKeyProvider(config?: KeyProviderConfig): KeyProvider
   const resolved = resolveKeyProviderConfig(config)
   let cachedPublicKey: KeyObject | null = null
   let cachedPrivateKey: KeyObject | null = null
+  let loadedAt: Date | null = null
 
   function readPublicKeyPem(): string {
     if (resolved.provider === 'file') {
@@ -110,6 +122,19 @@ export function createServerKeyProvider(config?: KeyProviderConfig): KeyProvider
     return normalizePem(resolved.privateKey)
   }
 
+  function getFileTimestamps() {
+    const publicKeyLastModifiedAt =
+      resolved.provider === 'file' && resolved.publicKeyPath
+        ? statSync(resolved.publicKeyPath).mtime.toISOString()
+        : undefined
+    const privateKeyLastModifiedAt =
+      resolved.provider === 'file' && resolved.privateKeyPath
+        ? statSync(resolved.privateKeyPath).mtime.toISOString()
+        : undefined
+
+    return { publicKeyLastModifiedAt, privateKeyLastModifiedAt }
+  }
+
   return {
     getHealth(): KeyProviderHealth {
       const publicKeyConfigured = resolved.provider === 'file'
@@ -132,14 +157,21 @@ export function createServerKeyProvider(config?: KeyProviderConfig): KeyProvider
       }
 
       try {
+        const publicPem = this.getPublicKeyPem()
+        const privatePem = this.getPrivateKeyPem()
         this.getPublicKeyObject()
         this.getPrivateKeyObject()
+        const timestamps = getFileTimestamps()
 
         return {
           configured: true,
           provider: resolved.provider,
           publicKeyConfigured: true,
           privateKeyConfigured: true,
+          publicKeyFingerprint: fingerprintPem(publicPem),
+          privateKeyFingerprint: fingerprintPem(privatePem),
+          loadedAt: loadedAt?.toISOString(),
+          ...timestamps,
         }
       } catch (error) {
         return {
@@ -150,6 +182,12 @@ export function createServerKeyProvider(config?: KeyProviderConfig): KeyProvider
           error: error instanceof Error ? error.message : 'Failed to load server keys',
         }
       }
+    },
+
+    refresh(): void {
+      cachedPublicKey = null
+      cachedPrivateKey = null
+      loadedAt = null
     },
 
     getPublicKeyPem(): string {
@@ -163,6 +201,7 @@ export function createServerKeyProvider(config?: KeyProviderConfig): KeyProvider
     getPublicKeyObject(): KeyObject {
       if (!cachedPublicKey) {
         cachedPublicKey = createPublicKey(readPublicKeyPem())
+        loadedAt = loadedAt ?? new Date()
       }
       return cachedPublicKey
     },
@@ -170,6 +209,7 @@ export function createServerKeyProvider(config?: KeyProviderConfig): KeyProvider
     getPrivateKeyObject(): KeyObject {
       if (!cachedPrivateKey) {
         cachedPrivateKey = createPrivateKey(readPrivateKeyPem())
+        loadedAt = loadedAt ?? new Date()
       }
       return cachedPrivateKey
     },

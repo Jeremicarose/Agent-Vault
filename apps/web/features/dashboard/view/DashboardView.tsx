@@ -11,6 +11,7 @@ import { HcsAuditTrail } from './HcsAuditTrail'
 import { TrustReadinessPanel } from './TrustReadinessPanel'
 import { LaunchControlPanel } from './LaunchControlPanel'
 import { PaymentIncidentQueue } from './PaymentIncidentQueue'
+import { KeyHealthPanel } from './KeyHealthPanel'
 
 const manageLinks = [
   {
@@ -98,6 +99,8 @@ export function DashboardView() {
       </div>
 
       <PaymentIncidentQueue />
+
+      <KeyHealthPanel />
 
       {/* Session Keys */}
       <SessionManager />

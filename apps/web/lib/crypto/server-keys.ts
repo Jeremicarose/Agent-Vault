@@ -12,8 +12,15 @@ import {
 
 export { generateKeyPair, type HybridEncryptedData, type ServerKeyHealth }
 
+let provider = createServerKeyProvider()
+
 function getProvider() {
-  return createServerKeyProvider()
+  return provider
+}
+
+export function refreshServerKeyProvider(): void {
+  provider.refresh()
+  provider = createServerKeyProvider()
 }
 
 export function getServerKeyHealth(): ServerKeyHealth {
