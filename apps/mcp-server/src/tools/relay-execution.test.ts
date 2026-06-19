@@ -15,6 +15,8 @@ const validPayload: ExecuteSessionRequest = {
   chainId: 296,
 }
 
+process.env.INTERNAL_SERVICE_SECRET = 'test-internal-secret'
+
 describe('submitRelayExecution', () => {
   it('returns txHash on successful relay submission', async () => {
     const result = await submitRelayExecution(

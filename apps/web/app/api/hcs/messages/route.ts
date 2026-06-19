@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  decodeMirrorNodeMessage,
+  filterHcsMessages,
+  toHcsCsv,
+  type MirrorNodeMessage,
+} from './format'
 
 const MIRROR_NODE_URLS: Record<string, string> = {
   testnet: 'https://testnet.mirrornode.hedera.com',
@@ -16,6 +22,12 @@ export async function GET(request: NextRequest) {
   const topicId = searchParams.get('topicId')
   const network = searchParams.get('network') || 'testnet'
   const limit = Math.min(parseInt(searchParams.get('limit') || '25', 10), 100)
+  const action = searchParams.get('action') || undefined
+  const search = searchParams.get('search') || undefined
+  const owner = searchParams.get('owner') || undefined
+  const agent = searchParams.get('agent') || undefined
+  const sessionId = searchParams.get('sessionId') || undefined
+  const format = searchParams.get('format') || 'json'
 
   if (!topicId) {
     return NextResponse.json({ error: 'topicId is required' }, { status: 400 })
@@ -45,35 +57,34 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json()
 
-    // Parse and decode messages
-    const messages = (data.messages || []).map((msg: {
-      consensus_timestamp: string
-      sequence_number: number
-      message: string
-      topic_id: string
-    }) => {
-      let decoded: unknown = null
-      try {
-        const raw = Buffer.from(msg.message, 'base64').toString('utf8')
-        decoded = JSON.parse(raw)
-      } catch {
-        decoded = null
-      }
+    const messages = (data.messages || []).map((msg: MirrorNodeMessage) =>
+      decodeMirrorNodeMessage(msg, network, topicId)
+    )
 
-      return {
-        sequenceNumber: msg.sequence_number,
-        timestamp: msg.consensus_timestamp,
-        topicId: msg.topic_id,
-        decoded,
-        hashScanUrl: `https://hashscan.io/${network}/topic/${topicId}/message/${msg.sequence_number}`,
-      }
+    const filteredMessages = filterHcsMessages(messages, {
+      action,
+      search,
+      owner,
+      agent,
+      sessionId,
     })
+
+    if (format === 'csv') {
+      return new NextResponse(toHcsCsv(filteredMessages), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename=\"hcs-audit-${topicId}.csv\"`,
+        },
+      })
+    }
 
     return NextResponse.json({
       topicId,
       network,
-      messages,
-      total: messages.length,
+      filters: { action, search, owner, agent, sessionId },
+      messages: filteredMessages,
+      total: filteredMessages.length,
     })
   } catch (error) {
     console.error('[HCS Messages] Failed to fetch:', error)

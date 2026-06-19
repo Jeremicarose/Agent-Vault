@@ -9,6 +9,7 @@
  * - PORT: Server port (default 3001)
  * - SERVER_PRIVATE_KEY: RSA private key for decrypting session keys
  * - MCP_CLIENT_SECRET: OAuth client secret for agentvault-mcp-platform
+ * - INTERNAL_SERVICE_SECRET: Shared bearer secret for MCP -> web internal calls
  */
 
 export interface Config {
@@ -20,6 +21,7 @@ export interface Config {
   serverPrivateKey: string
   mcpClientSecret: string
   mcpClientId: string
+  internalServiceSecret: string
   chainId: number
 }
 
@@ -45,6 +47,7 @@ export function loadConfig(): Config {
     serverPrivateKey: getEnvOrThrow('SERVER_PRIVATE_KEY'),
     mcpClientSecret: getEnvOrThrow('MCP_CLIENT_SECRET'),
     mcpClientId: getEnvOrDefault('MCP_CLIENT_ID', 'agentvault-mcp-platform'),
+    internalServiceSecret: getEnvOrThrow('INTERNAL_SERVICE_SECRET'),
     chainId: parseInt(getEnvOrDefault('CHAIN_ID', '296'), 10),
   }
 }

@@ -8,8 +8,6 @@ import {
 } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { hederaTestnet, hedera } from 'viem/chains'
-import { withAuth } from '@/lib/auth'
-import { verifyInternalServiceAuth } from '@/lib/auth'
 import { db, sessionKeys } from '@/lib/db'
 import { and, eq } from 'drizzle-orm'
 import {
@@ -23,7 +21,6 @@ import {
   validateExecuteChainPreflight,
   validateExecuteOwnershipAndSession,
 } from './ownership'
-import { handleInternalExecuteRequest } from './internal-handler'
 
 const SUPPORTED_CHAINS: Record<number, Chain> = {
   296: hederaTestnet,
@@ -39,28 +36,7 @@ function errorResponse(
   return NextResponse.json({ error, code, details }, { status })
 }
 
-/**
- * POST /api/execute — Relay an executeWithSession transaction
- *
- * The relayer pays gas on behalf of the session key holder.
- * The session key signature is verified on-chain by AgentDelegator.
- *
- * Body: {
- *   sessionId:           bytes32 hex
- *   mode:                bytes32 hex (0x00...00 = single, 0x01...00 = batch)
- *   executionData:       hex-encoded calldata
- *   sessionKeySignature: hex-encoded ECDSA signature from session key
- *   chainId:             number (296 = testnet, 295 = mainnet)
- *   ownerAddress:        address of the smart account owner
- * }
- *
- * Returns: { txHash }
- */
-async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@/lib/auth/session').getCurrentUser>>, request: Request) {
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
+export async function handleInternalExecuteRequest(request: Request): Promise<NextResponse> {
   const body = await request.json()
   const parsed = validateExecuteSessionRequest(body)
 
@@ -82,18 +58,15 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
     ownerAddress,
   } = parsed.data
 
-  // --- Validate inputs ---
-
   const session = await db.query.sessionKeys.findFirst({
     where: and(
       eq(sessionKeys.sessionId, sessionId.toLowerCase()),
-      eq(sessionKeys.userId, user.id),
       eq(sessionKeys.isActive, true)
     ),
   })
 
   const ownershipValidation = validateExecuteOwnershipAndSession({
-    authenticatedWalletAddress: user.walletAddress,
+    authenticatedWalletAddress: ownerAddress,
     ownerAddress,
     session: session ?? null,
   })
@@ -115,10 +88,7 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
     )
   }
 
-  // --- Resolve chain ---
-
   const delegatorAddress = AGENT_DELEGATOR_ADDRESS[chainId]
-
   const chainPreflight = validateExecuteChainPreflight({
     chainId,
     supportedChains: SUPPORTED_CHAINS,
@@ -136,9 +106,6 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
   }
 
   const chain = SUPPORTED_CHAINS[chainId]
-
-  // --- Load relayer key ---
-
   const relayerKey = process.env.FACILITATOR_RELAYER_KEY as Hex | undefined
   if (!relayerKey) {
     console.error('[execute] FACILITATOR_RELAYER_KEY not configured')
@@ -164,7 +131,6 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
       transport,
     })
 
-    // --- Simulate the call first to catch revert errors ---
     await publicClient.simulateContract({
       address: delegatorAddress,
       abi: agentDelegatorAbi,
@@ -178,7 +144,6 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
       account: account,
     })
 
-    // --- Submit the transaction ---
     const txHash = await walletClient.writeContract({
       address: delegatorAddress,
       abi: agentDelegatorAbi,
@@ -191,7 +156,6 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
       ],
     })
 
-    // Wait for receipt
     const receipt = await publicClient.waitForTransactionReceipt({
       hash: txHash,
       timeout: 60_000,
@@ -204,13 +168,10 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
       gasUsed: Number(receipt.gasUsed),
     })
   } catch (error: unknown) {
-    console.error('[execute] Transaction failed:', error)
-
-    // Extract revert reason if available
+    console.error('[execute] Internal transaction failed:', error)
     const message =
       error instanceof Error ? error.message : 'Transaction execution failed'
 
-    // Check for known contract errors
     if (message.includes('SessionNotFound')) {
       return errorResponse(404, EXECUTE_ERROR_CODES.SESSION_NOT_FOUND_ONCHAIN, 'Session not found on-chain')
     }
@@ -232,17 +193,4 @@ async function handleAuthenticatedPost(user: Awaited<ReturnType<typeof import('@
 
     return errorResponse(500, EXECUTE_ERROR_CODES.EXECUTION_FAILED, message)
   }
-}
-
-const authenticatedPost = withAuth(async (user, request) => {
-  return handleAuthenticatedPost(user, request)
-})
-
-export async function POST(request: Request, context: { params: Promise<Record<string, string>> }) {
-  const internalAuth = verifyInternalServiceAuth(request.headers.get('authorization'))
-  if (internalAuth.ok) {
-    return handleInternalExecuteRequest(request)
-  }
-
-  return authenticatedPost(request as never, context)
 }

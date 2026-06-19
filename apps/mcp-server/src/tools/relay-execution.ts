@@ -2,6 +2,7 @@ import {
   parseExecuteErrorResponse,
   type ExecuteSessionRequest,
 } from '@x402/contracts'
+import { buildInternalServiceAuthHeader } from '@web/lib/auth/internal'
 import type { Hex } from 'viem'
 
 export interface RelayExecutionSuccess {
@@ -17,6 +18,7 @@ export async function submitRelayExecution(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...buildInternalServiceAuthHeader(),
     },
     body: JSON.stringify(requestPayload),
   })

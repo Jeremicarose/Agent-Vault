@@ -1,9 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { ExternalLink, FileText, Loader2, Shield } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Download, ExternalLink, FileText, Loader2, Search, Shield } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface AuditMessage {
   sequenceNumber: number
@@ -37,6 +46,21 @@ export function HcsAuditTrail() {
   const [loading, setLoading] = useState(true)
   const [topicId, setTopicId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [action, setAction] = useState<string>('all')
+  const [network, setNetwork] = useState('testnet')
+
+  const queryString = useMemo(() => {
+    if (!topicId) return ''
+    const params = new URLSearchParams({
+      topicId,
+      network,
+      limit: '50',
+    })
+    if (search.trim()) params.set('search', search.trim())
+    if (action !== 'all') params.set('action', action)
+    return params.toString()
+  }, [topicId, network, search, action])
 
   useEffect(() => {
     async function fetchIdentity() {
@@ -46,7 +70,7 @@ export function HcsAuditTrail() {
         const data = await res.json()
         if (data.auditTopicId) {
           setTopicId(data.auditTopicId)
-          fetchMessages(data.auditTopicId, data.network || 'testnet')
+          setNetwork(data.network || 'testnet')
         } else {
           setLoading(false)
         }
@@ -55,9 +79,15 @@ export function HcsAuditTrail() {
       }
     }
 
-    async function fetchMessages(topic: string, network: string) {
+    fetchIdentity()
+  }, [])
+
+  useEffect(() => {
+    async function fetchMessages() {
+      if (!queryString) return
       try {
-        const res = await fetch(`/api/hcs/messages?topicId=${topic}&network=${network}&limit=10`)
+        setLoading(true)
+        const res = await fetch(`/api/hcs/messages?${queryString}`)
         if (!res.ok) throw new Error('Failed to fetch')
         const data = await res.json()
         setMessages(data.messages || [])
@@ -68,8 +98,22 @@ export function HcsAuditTrail() {
       }
     }
 
-    fetchIdentity()
-  }, [])
+    fetchMessages()
+  }, [queryString])
+
+  const handleExport = async (format: 'json' | 'csv') => {
+    if (!topicId) return
+    const params = new URLSearchParams(queryString)
+    params.set('format', format)
+    const response = await fetch(`/api/hcs/messages?${params.toString()}`)
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `hcs-audit-${topicId}.${format === 'csv' ? 'csv' : 'json'}`
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (loading) {
     return (
@@ -127,6 +171,38 @@ export function HcsAuditTrail() {
           >
             HashScan <ExternalLink className="size-3" />
           </a>
+        </div>
+        <div className="flex flex-col gap-3 pt-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search audit messages..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={action} onValueChange={setAction}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="All actions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All actions</SelectItem>
+              {Object.entries(ACTION_LABELS).map(([value, info]) => (
+                <SelectItem key={value} value={value}>{info.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport('json')}>
+              <Download className="mr-2 size-4" />
+              JSON
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport('csv')}>
+              <Download className="mr-2 size-4" />
+              CSV
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

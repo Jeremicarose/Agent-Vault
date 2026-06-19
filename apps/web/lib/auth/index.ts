@@ -16,5 +16,11 @@ export {
   destroySession,
 } from './session'
 
+// Internal service auth
+export {
+  verifyInternalServiceAuth,
+  buildInternalServiceAuthHeader,
+} from './internal'
+
 // Route protection wrappers
 export { withAuth, withOptionalAuth } from './withAuth'

@@ -167,6 +167,8 @@ export const apiProxies = pgTable('api_proxies', {
 export const requestLogs = pgTable('request_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
   proxyId: uuid('proxy_id').references(() => apiProxies.id, { onDelete: 'cascade' }).notNull(),
+  paymentIntentId: uuid('payment_intent_id'),
+  settlementTxHash: varchar('settlement_tx_hash', { length: 66 }),
   requesterWallet: varchar('requester_wallet', { length: 42 }),
   status: varchar('status', { length: 20 }).notNull(), // 'success', 'payment_failed', 'proxy_error'
   timestamp: timestamp('timestamp', { withTimezone: true }).defaultNow().notNull(),
@@ -195,8 +197,10 @@ export const paymentIntents = pgTable('payment_intents', {
   recipientAddress: varchar('recipient_address', { length: 42 }).notNull(),
   amount: bigint('amount', { mode: 'number' }).notNull(),
   chainId: integer('chain_id').notNull(),
-  status: varchar('status', { length: 20 }).default('pending').notNull(),
+  status: varchar('status', { length: 32 }).default('pending').notNull(),
   paymentTxHash: varchar('payment_tx_hash', { length: 66 }).unique(),
+  settlementVerifiedAt: timestamp('settlement_verified_at', { withTimezone: true }),
+  failureReason: text('failure_reason'),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [

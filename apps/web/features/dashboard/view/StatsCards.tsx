@@ -1,6 +1,6 @@
 'use client'
 
-import { Layers, Activity, CheckCircle, DollarSign } from 'lucide-react'
+import { Layers, Activity, CheckCircle, DollarSign, AlertTriangle, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatEarnings, formatSuccessRate } from '@/lib/formatting'
 import type { DashboardTotals } from '../model/types'
@@ -35,10 +35,34 @@ export function StatsCards({ totals }: StatsCardsProps) {
       icon: DollarSign,
       description: 'USDC.E earned',
     },
+    {
+      title: 'Settled Volume',
+      value: formatEarnings(totals.settledVolume),
+      icon: DollarSign,
+      description: `${totals.settledPayments.toLocaleString()} settled payments`,
+    },
+    {
+      title: 'Payment Failures',
+      value: totals.paymentFailedRequests.toLocaleString(),
+      icon: AlertTriangle,
+      description: `${totals.proxyErrors.toLocaleString()} proxy errors`,
+    },
+    {
+      title: 'Unique Requesters',
+      value: totals.uniqueRequesters.toLocaleString(),
+      icon: Users,
+      description: 'Distinct wallets seen',
+    },
+    {
+      title: 'Pending Intents',
+      value: totals.pendingPaymentIntents.toLocaleString(),
+      icon: Activity,
+      description: `${totals.upstreamFailedAfterSettlement.toLocaleString()} settled but upstream failed`,
+    },
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
